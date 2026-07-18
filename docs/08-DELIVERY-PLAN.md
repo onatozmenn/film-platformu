@@ -171,11 +171,11 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 ### Scope
 
 - [ ] Record the legally reviewed consent-management decision in a new ADR before production behavior is enabled.
-- [ ] Implement owned ad-decision types, server-side sanitized configuration, Google IMA adapter, and deterministic fake.
-- [ ] Load ad code only after consent and only on the watch route.
-- [ ] Implement personalized-denied mode, test-tag environments, empty-ad/error/timeout/blocked paths, and no-retry rule.
-- [ ] Add coarse privacy-safe ad outcome telemetry and CSP updates.
-- [ ] Add consent, storage, fail-open, bundle-boundary, and browser player/ad handoff tests.
+- [x] Implement owned ad-decision types, server-side sanitized configuration, Google IMA adapter, and deterministic fake.
+- [x] Load ad code only after consent and only on the watch route.
+- [x] Implement personalized-denied mode, test-tag environments, empty-ad/error/timeout/blocked paths, and no-retry rule.
+- [x] Add coarse privacy-safe ad outcome telemetry and CSP updates.
+- [x] Add consent, storage, fail-open, bundle-boundary, and browser player/ad handoff tests.
 
 ### Acceptance
 
@@ -187,7 +187,14 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Active after validated WP-03 guest playback. Production advertising remains blocked until the owner supplies a legally reviewed CMP decision that can be accepted in the required consent-management ADR; deterministic local/test implementation may proceed without a production tag or optional tracking.
+- Consent and decision policy: [`src/modules/advertising/domain/preroll-policy.ts`](../src/modules/advertising/domain/preroll-policy.ts) maps owned `UNKNOWN`, `DENIED`, `NON_PERSONALIZED`, and `PERSONALIZED` states to zero or one preroll, with separate sanitized `npa=1` and personalized tags. [`src/modules/advertising/infrastructure/advertising-environment.ts`](../src/modules/advertising/infrastructure/advertising-environment.ts) defaults off and rejects every non-disabled production configuration.
+- Provider and player handoff: the non-production fake builds only Google's published sample tag and deterministic completed/empty/error/timeout/blocked outcomes. [`src/modules/advertising/ui/consent-aware-watch-player.tsx`](../src/modules/advertising/ui/consent-aware-watch-player.tsx) strictly validates the provider host/path and personalization mode, dynamically loads ad code after consent, uses Mux Player's managed Google IMA `adTagUrl` integration, and returns every failure path to the existing content grant without another session request. The watch route composes that advertising-owned orchestrator into playback's presentation-only screen, preserving the documented module dependency direction.
+- Privacy and transport: [`src/app/api/v1/advertising/outcomes/route.ts`](../src/app/api/v1/advertising/outcomes/route.ts) accepts only a bounded same-origin opaque session ID and coarse outcome, applies its own request budget, logs only request ID plus outcome, and returns private `204`. The session route resolves advertising only after a successful playback grant and fails open to `advertising: null` on consent/provider uncertainty.
+- Browser and visual evidence: 54 Playwright checks passed across four viewports with 38 intentional skips. Denied consent produced no optional provider request, telemetry, or storage; non-personalized consent produced only a fixed `npa=1` sample tag, one preroll, one outcome, and one playback session; completed/empty/error/timeout/blocked paths all reached nonblank content. Reviewed [mobile preroll](../tests/e2e/__screenshots__/chromium-mobile/watch-preroll.png) and [desktop preroll](../tests/e2e/__screenshots__/chromium-desktop/watch-preroll.png) baselines preserve 16:9 framing, responsive fit, and axe compliance.
+- Local validation on 2026-07-19: formatting, zero-warning lint, strict typecheck, and production build passed; 171 unit/component/route/provider tests passed; aggregate coverage passed at 85.24% statements, 77.94% branches, 85.9% functions, and 85.72% lines; file-scoped 100% gates passed for preroll policy and watchability; 16 PostgreSQL tests and `db:check` passed; non-watch routes remained at 160.3 KB gzip JavaScript and 8.0 KB gzip CSS.
+- Security/content impact: client-body consent remains rejected; arbitrary/mismatched tag URLs fail closed before optional code loads; no title, movie ID, user data, history, provider URL, production tag, cookie, or local/session storage value enters ad telemetry. Report-only CSP adds explicit IMA/Google Ads origins without wildcard sources, and non-watch bundle checks contain no Mux, IMA, or ad-tag identifiers.
+- External decision: [ADR 0004](adr/0004-production-consent-selection-gate.md) is intentionally `Proposed`; it records candidate approaches and the enforced production-disabled gate, not a CMP selection or legal approval. The owner/legal reviewer has not supplied launch-territory consent policy, CMP representation, production Google Ad Manager tag, or `ads.txt` values, so the first scope item and production advertising remain blocked without fabricated evidence.
+- Remote validation: pending the WP-04 implementation commit CI run. Do not activate WP-07 from this package until that run passes and the external ADR decision is accepted; independently unblocked WP-05 may proceed afterward.
 
 ## WP-05 Optional Identity And Member Library
 

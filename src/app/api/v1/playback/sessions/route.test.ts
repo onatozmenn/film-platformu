@@ -1,12 +1,21 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { consumeRateLimit, createSession, resolveTerritory } = vi.hoisted(() => ({
-  consumeRateLimit: vi.fn(() => true),
-  createSession: vi.fn(),
-  resolveTerritory: vi.fn(() => "TR"),
-}));
+import type { PrerollOpportunity } from "@/modules/advertising/domain/preroll-policy";
 
+const { consumeRateLimit, createSession, resolvePreroll, resolveTerritory, warn } = vi.hoisted(
+  () => ({
+    consumeRateLimit: vi.fn(() => true),
+    createSession: vi.fn(),
+    resolvePreroll: vi.fn<(headers: Headers) => PrerollOpportunity | null>(() => null),
+    resolveTerritory: vi.fn(() => "TR"),
+    warn: vi.fn(),
+  }),
+);
+
+vi.mock("@/modules/advertising/server", () => ({
+  advertisingService: { resolvePreroll },
+}));
 vi.mock("@/modules/playback/server", () => ({
   playbackService: { createSession },
   playbackSessionRateLimiter: { consume: consumeRateLimit },
@@ -15,6 +24,7 @@ vi.mock("@/modules/playback/server", () => ({
 vi.mock("@/shared/config/server-environment", () => ({
   getServerEnvironment: () => ({ siteOrigin: "https://film.example" }),
 }));
+vi.mock("@/shared/observability/logger", () => ({ logger: { warn } }));
 
 import { POST } from "./route";
 
@@ -38,7 +48,10 @@ beforeEach(() => {
   consumeRateLimit.mockReset();
   consumeRateLimit.mockReturnValue(true);
   createSession.mockReset();
+  resolvePreroll.mockReset();
+  resolvePreroll.mockReturnValue(null);
   resolveTerritory.mockClear();
+  warn.mockReset();
 });
 
 describe("POST /api/v1/playback/sessions", () => {
@@ -46,7 +59,6 @@ describe("POST /api/v1/playback/sessions", () => {
     createSession.mockResolvedValue({
       kind: "success",
       session: {
-        advertising: null,
         movie: { durationSeconds: 5_880, id: movieId, title: "Kıyıdaki Sessizlik" },
         playback: {
           expiresAt: "2026-07-19T12:05:00.000Z",
@@ -67,8 +79,75 @@ describe("POST /api/v1/playback/sessions", () => {
     expect(response.headers.get("x-request-id")).toBe("req_route_test");
     expect(resolveTerritory).toHaveBeenCalledOnce();
     expect(createSession).toHaveBeenCalledWith(movieId, "TR");
+    expect(resolvePreroll).toHaveBeenCalledOnce();
     await expect(response.json()).resolves.toMatchObject({
       data: { advertising: null, sessionId: "ps_opaque" },
+    });
+  });
+
+  it("attaches at most one server-resolved preroll to an eligible session", async () => {
+    createSession.mockResolvedValue({
+      kind: "success",
+      session: {
+        movie: { durationSeconds: 5_880, id: movieId, title: "Kıyıdaki Sessizlik" },
+        playback: {
+          expiresAt: "2026-07-19T12:05:00.000Z",
+          playbackId: "fake-playback-kiyidaki-sessizlik",
+          provider: "mux",
+          token: "fake_ps_opaque",
+        },
+        resumeAtSeconds: 0,
+        sessionId: "ps_opaque",
+      },
+    });
+    resolvePreroll.mockReturnValue({
+      personalized: false,
+      placement: "preroll",
+      provider: "google-ima",
+      tagUrl: "https://pubads.g.doubleclick.net/gampad/ads?npa=1",
+    });
+
+    const response = await POST(request({ movieId }));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      data: {
+        advertising: {
+          personalized: false,
+          placement: "preroll",
+          provider: "google-ima",
+          tagUrl: "https://pubads.g.doubleclick.net/gampad/ads?npa=1",
+        },
+      },
+    });
+  });
+
+  it("fails open to eligible content when ad decision resolution throws", async () => {
+    createSession.mockResolvedValue({
+      kind: "success",
+      session: {
+        movie: { durationSeconds: 5_880, id: movieId, title: "Kıyıdaki Sessizlik" },
+        playback: {
+          expiresAt: "2026-07-19T12:05:00.000Z",
+          playbackId: "fake-playback-kiyidaki-sessizlik",
+          provider: "mux",
+          token: "fake_ps_opaque",
+        },
+        resumeAtSeconds: 0,
+        sessionId: "ps_opaque",
+      },
+    });
+    resolvePreroll.mockImplementation(() => {
+      throw new Error("private consent provider detail");
+    });
+
+    const response = await POST(request({ movieId }));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ data: { advertising: null } });
+    expect(warn).toHaveBeenCalledWith("advertising.decision_failed", {
+      outcome: "disabled",
+      requestId: "req_route_test",
     });
   });
 
@@ -102,6 +181,7 @@ describe("POST /api/v1/playback/sessions", () => {
 
     expect(response.status).toBe(400);
     expect(createSession).not.toHaveBeenCalled();
+    expect(resolvePreroll).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -114,6 +194,7 @@ describe("POST /api/v1/playback/sessions", () => {
     const response = await POST(request({ movieId }));
 
     expect(response.status).toBe(status);
+    expect(resolvePreroll).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toMatchObject({ code, requestId: "req_route_test" });
   });
 });

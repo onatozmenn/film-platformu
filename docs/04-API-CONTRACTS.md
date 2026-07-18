@@ -126,6 +126,21 @@ Response:
 
 The deterministic non-production video fake may append `fixtureSourceUrl` and `fixtureTextTracks` under `playback` so browser tests can play an owned local asset. These fields are absent from Mux grants and are rejected as configuration in production; they never accept caller-provided URLs.
 
+The deterministic advertising fake may append `fixtureScenario` under `advertising` with one of `blocked`, `completed`, `empty`, `error`, or `timeout`. It is available only when the non-production fake provider is explicitly enabled. The `X-Film-Test-Consent` header is accepted only by that fake and is never a production consent representation.
+
+### Record Advertising Outcome
+
+`POST /api/v1/advertising/outcomes` accepts a same-origin, private/no-store best-effort event after an actual preroll opportunity:
+
+```json
+{
+  "sessionId": "ps_opaque_random",
+  "outcome": "completed"
+}
+```
+
+`outcome` is one of `blocked`, `completed`, `empty`, `error`, `skipped`, or `timeout`. The route rejects movie/title/user/tag/provider fields, logs only the request ID and coarse outcome, and returns `204 No Content`. Telemetry failure never delays content, requests another playback session, or changes watchability.
+
 ### Update Member Progress
 
 `PUT /api/v1/me/progress/:movieId`

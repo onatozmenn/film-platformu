@@ -1,29 +1,30 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { advertisingService } from "@/modules/advertising/server";
-import {
-  playbackService,
-  playbackSessionRateLimiter,
-  territoryResolver,
-} from "@/modules/playback/server";
+import { advertisingOutcomeRateLimiter } from "@/modules/advertising/server";
 import { getServerEnvironment } from "@/shared/config/server-environment";
-import { createRequestId, requestIdHeader } from "@/shared/http/request-id";
 import { problemResponse } from "@/shared/http/problem-details";
+import { createRequestId, requestIdHeader } from "@/shared/http/request-id";
 import { logger } from "@/shared/observability/logger";
 
-const maximumBodyBytes = 1_024;
-const requestSchema = z.object({ movieId: z.uuid() }).strict();
+const maximumBodyBytes = 512;
+const outcomeSchema = z
+  .object({
+    outcome: z.enum(["blocked", "completed", "empty", "error", "skipped", "timeout"]),
+    sessionId: z
+      .string()
+      .regex(/^ps_[a-zA-Z0-9]+$/u)
+      .max(64),
+  })
+  .strict();
 
 function isSameOrigin(request: NextRequest): boolean {
   const expected = new URL(getServerEnvironment().siteOrigin);
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
-
   if (origin === null || host === null) {
     return false;
   }
-
   try {
     return new URL(origin).origin === expected.origin && host === expected.host;
   } catch {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!isSameOrigin(request)) {
     return problemResponse("FORBIDDEN", requestId);
   }
-  if (!playbackSessionRateLimiter.consume(rateLimitKey(request))) {
+  if (!advertisingOutcomeRateLimiter.consume(rateLimitKey(request))) {
     return problemResponse("RATE_LIMITED", requestId);
   }
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
@@ -60,44 +61,24 @@ export async function POST(request: NextRequest): Promise<Response> {
     return problemResponse("VALIDATION_FAILED", requestId);
   }
 
-  let parsed: z.infer<typeof requestSchema>;
+  let payload: unknown;
   try {
-    parsed = requestSchema.parse(JSON.parse(body) as unknown);
+    payload = JSON.parse(body) as unknown;
   } catch {
     return problemResponse("VALIDATION_FAILED", requestId);
   }
-
-  try {
-    const territory = territoryResolver.resolve(request.headers);
-    const result = await playbackService.createSession(parsed.movieId, territory);
-
-    switch (result.kind) {
-      case "not-available":
-        return problemResponse("PLAYBACK_NOT_AVAILABLE", requestId);
-      case "not-found":
-        return problemResponse("NOT_FOUND", requestId);
-      case "provider-unavailable":
-        return problemResponse("PROVIDER_UNAVAILABLE", requestId);
-      case "success": {
-        let advertising = null;
-        try {
-          advertising = advertisingService.resolvePreroll(request.headers);
-        } catch {
-          logger.warn("advertising.decision_failed", { outcome: "disabled", requestId });
-        }
-        return Response.json(
-          { data: { ...result.session, advertising } },
-          {
-            headers: {
-              "Cache-Control": "private, no-store",
-              "X-Content-Type-Options": "nosniff",
-              "X-Request-Id": requestId,
-            },
-          },
-        );
-      }
-    }
-  } catch {
-    return problemResponse("INTERNAL_ERROR", requestId);
+  const parsed = outcomeSchema.safeParse(payload);
+  if (!parsed.success) {
+    return problemResponse("VALIDATION_FAILED", requestId);
   }
+
+  logger.info("advertising.outcome", { outcome: parsed.data.outcome, requestId });
+  return new Response(null, {
+    headers: {
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff",
+      "X-Request-Id": requestId,
+    },
+    status: 204,
+  });
 }

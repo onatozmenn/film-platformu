@@ -81,7 +81,7 @@ pnpm check:budgets
 
 `pnpm check:budgets` requires an existing production build plus Chromium and starts an isolated production server to enforce the public-route gzip targets.
 
-TMDB metadata support is disabled by default and its synthetic contract tests make no live request. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. No Mux, TMDB, email, advertising, or production credential is required for local discovery and playback tests.
+TMDB metadata support is disabled by default and its synthetic contract tests make no live request. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. Advertising defaults to disabled; browser tests opt into a deterministic fake and a Google-owned sample tag without making an ad-provider request. No Mux, TMDB, email, advertising, or production credential is required for local discovery and playback tests.
 
 ## Content Boundary
 

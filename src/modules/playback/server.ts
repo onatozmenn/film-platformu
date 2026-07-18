@@ -4,10 +4,10 @@ import { randomUUID } from "node:crypto";
 
 import { getServerEnvironment } from "@/shared/config/server-environment";
 import { database } from "@/shared/db/database";
+import { createFixedWindowRateLimiter } from "@/shared/http/fixed-window-rate-limiter";
 
 import { createPlaybackService } from "./application/create-playback-session";
 import { createVideoWebhookService } from "./application/process-video-webhook";
-import { createFixedWindowRateLimiter } from "./infrastructure/fixed-window-rate-limiter";
 import { createPrismaPlaybackRepository } from "./infrastructure/prisma-playback-repository";
 import { createPrismaVideoWebhookRepository } from "./infrastructure/prisma-video-webhook-repository";
 import { createTerritoryResolver } from "./infrastructure/territory-resolver";

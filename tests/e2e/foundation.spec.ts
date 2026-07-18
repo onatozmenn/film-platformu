@@ -65,7 +65,9 @@ test("renders the responsive Turkish foundation shell without leaks", async ({ p
   }
 
   expect(publicBodies.join("\n")).not.toContain(serverOnlySentinel);
-  expect(publicBodies.join("\n")).not.toMatch(/mux-player|google\.ima|next-auth/u);
+  expect(publicBodies.join("\n")).not.toMatch(
+    /mux-player|google\.ima|imasdk\.googleapis\.com|pubads\.g\.doubleclick\.net|next-auth/u,
+  );
   expect(runtimeGoogleFontRequests).toEqual([]);
   expect(browserErrors).toEqual([]);
 });

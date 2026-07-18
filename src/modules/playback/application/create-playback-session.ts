@@ -4,7 +4,6 @@ import { evaluateWatchability, type WatchabilityDecision } from "../domain/watch
 const maximumGrantLifetimeSeconds = 5 * 60;
 
 export type PlaybackSession = Readonly<{
-  advertising: null;
   movie: Readonly<{
     durationSeconds: number;
     id: string;
@@ -143,7 +142,6 @@ export function createPlaybackService(dependencies: CreatePlaybackSessionDepende
         return {
           kind: "success",
           session: {
-            advertising: null,
             movie: {
               durationSeconds: evaluated.decision.asset.durationSeconds,
               id: evaluated.candidate.id,

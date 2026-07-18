@@ -61,6 +61,8 @@ export default defineConfig({
   webServer: {
     command: `corepack pnpm dev --hostname 127.0.0.1 --port ${port}`,
     env: {
+      ADVERTISING_PROVIDER: "fake",
+      ADVERTISING_TEST_SCENARIO: "completed",
       DATABASE_URL: process.env.DATABASE_URL ?? localDatabaseUrl,
       LOCAL_DEFAULT_TERRITORY: "TR",
       LOG_LEVEL: "warn",

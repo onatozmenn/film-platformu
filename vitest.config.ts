@@ -18,6 +18,8 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html"],
       thresholds: {
+        "src/modules/advertising/domain/preroll-policy.ts": { 100: true },
+        "src/modules/playback/domain/watchability.ts": { 100: true },
         branches: 75,
         functions: 80,
         lines: 80,

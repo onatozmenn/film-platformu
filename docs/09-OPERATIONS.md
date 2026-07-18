@@ -48,6 +48,8 @@ Maintain the exact variable names and requirement matrix in `.env.example` and t
 | `MUX_TOKEN_ID`, `MUX_TOKEN_SECRET` | Server | Mux management credentials, required only when `VIDEO_PROVIDER=mux`. |
 | `MUX_WEBHOOK_SECRET` | Server | Mux webhook verification secret, required only when `VIDEO_PROVIDER=mux`. |
 | `MUX_SIGNING_KEY_ID`, `MUX_SIGNING_PRIVATE_KEY` | Server | Signed-playback credentials, required only when `VIDEO_PROVIDER=mux`; private key stays server-only. |
+| `ADVERTISING_PROVIDER` | Server | Defaults to `disabled`. The deterministic `fake` is allowed only outside production; production rejects every non-disabled value until ADR 0004 is legally reviewed and accepted. |
+| `ADVERTISING_TEST_SCENARIO` | Local/test process | Optional fake outcome: `blocked`, `completed`, `empty`, `error`, or `timeout`; rejected unless `ADVERTISING_PROVIDER=fake`. |
 
 Provider-specific variables are added to this matrix by their owning work package. Presence alone never enables an integration.
 

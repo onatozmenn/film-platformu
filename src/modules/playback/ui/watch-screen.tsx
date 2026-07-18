@@ -1,7 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
-import { WatchPlayer } from "./watch-player";
+import type { ReactNode } from "react";
 
 export type WatchMovieView = Readonly<{
   ageRating: string | null;
@@ -15,8 +14,9 @@ export type WatchMovieView = Readonly<{
 
 export function WatchScreen({
   movie,
+  player,
   siteName,
-}: Readonly<{ movie: WatchMovieView; siteName: string }>) {
+}: Readonly<{ movie: WatchMovieView; player: ReactNode; siteName: string }>) {
   return (
     <>
       <a className="skip-link" href="#ana-icerik">
@@ -35,7 +35,7 @@ export function WatchScreen({
 
       <main className="watch-page" id="ana-icerik">
         <section className="watch-theater" aria-label={`${movie.title} oynatıcı`}>
-          <WatchPlayer key={movie.id} movieId={movie.id} title={movie.title} />
+          {player}
         </section>
         <section className="watch-information" aria-labelledby="watch-title">
           <p className="eyebrow">Şimdi gösterimde</p>

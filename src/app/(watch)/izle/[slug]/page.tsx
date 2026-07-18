@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ConsentAwareWatchPlayer } from "@/modules/advertising/ui/consent-aware-watch-player";
 import { parseMovieSlug } from "@/modules/catalog";
 import { catalogQueries } from "@/modules/catalog/server";
 import { WatchScreen } from "@/modules/playback/ui/watch-screen";
@@ -38,6 +39,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
         title: movie.title,
         year: movie.year,
       }}
+      player={<ConsentAwareWatchPlayer key={movie.id} movieId={movie.id} title={movie.title} />}
       siteName={siteName}
     />
   );

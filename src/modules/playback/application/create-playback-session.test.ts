@@ -79,7 +79,6 @@ describe("playback service", () => {
     expect(result).toEqual({
       kind: "success",
       session: {
-        advertising: null,
         movie: {
           durationSeconds: 5_880,
           id: candidate.id,

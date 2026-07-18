@@ -2,10 +2,41 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { z } from "zod";
 
-const playbackResponseSchema = z.object({
-  data: z.object({ playback: z.object({ token: z.string().min(1) }) }),
+const advertisingResponseSchema = z
+  .object({
+    fixtureScenario: z.enum(["blocked", "completed", "empty", "error", "timeout"]).optional(),
+    personalized: z.boolean(),
+    placement: z.literal("preroll"),
+    provider: z.literal("google-ima"),
+    tagUrl: z.url(),
+  })
+  .strict();
+const playbackResponseSchema = z
+  .object({
+    data: z
+      .object({
+        advertising: advertisingResponseSchema.nullable(),
+        playback: z.object({ token: z.string().min(1) }).passthrough(),
+      })
+      .passthrough(),
+  })
+  .passthrough();
+const outcomeRequestSchema = z.object({
+  outcome: z.enum(["blocked", "completed", "empty", "error", "skipped", "timeout"]),
+  sessionId: z.string().regex(/^ps_[a-zA-Z0-9]+$/u),
 });
 const muxServerOnlySentinel = "mux-server-only-sentinel-do-not-ship";
+const optionalAdProviderHosts = new Set([
+  "googleads.g.doubleclick.net",
+  "imasdk.googleapis.com",
+  "pagead2.googlesyndication.com",
+  "pubads.g.doubleclick.net",
+  "tpc.googlesyndication.com",
+]);
+
+function isOptionalAdProviderRequest(url: string): boolean {
+  return optionalAdProviderHosts.has(new URL(url).hostname);
+}
 
 function requirePublicJourneyViewport(projectName: string): void {
   test.skip(
@@ -46,6 +77,7 @@ test("eligible guest receives a private grant and renders owned fake video", asy
   expect(response.status()).toBe(200);
   expect(response.headers()["cache-control"]).toBe("private, no-store");
   const payload = playbackResponseSchema.parse((await response.json()) as unknown);
+  expect(payload.data.advertising).toBeNull();
   const token = payload.data.playback.token;
   const player = page.locator("mux-player");
   await expect(player).toBeVisible();
@@ -148,6 +180,8 @@ test("watch route declares explicit report-only playback CSP", async ({ request 
   expect(policy).toContain("default-src 'self'");
   expect(policy).toContain("media-src 'self' blob: https://stream.mux.com");
   expect(policy).toContain("img-src 'self' data: blob: https://image.mux.com");
+  expect(policy).toContain("script-src 'self' 'unsafe-inline' https://imasdk.googleapis.com");
+  expect(policy).toContain("frame-src https://imasdk.googleapis.com");
   expect(policy).toContain("object-src 'none'");
   expect(policy).toContain("frame-ancestors 'none'");
   expect(policy).not.toContain("*");
@@ -207,3 +241,146 @@ test("provider failure retries only after explicit visitor action", async ({ pag
   await expect.poll(() => sessionRequests).toBe(2);
   await expect(retry).toBeVisible();
 });
+
+test("denied consent initializes no optional advertising request, storage, or telemetry", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium-mobile",
+    "One denied-consent network proof is sufficient.",
+  );
+  await page.setExtraHTTPHeaders({ "x-film-test-consent": "DENIED" });
+  const optionalRequests: string[] = [];
+  const outcomeRequests: string[] = [];
+  page.on("request", (request) => {
+    if (isOptionalAdProviderRequest(request.url())) {
+      optionalRequests.push(request.url());
+    }
+    if (request.url().endsWith("/api/v1/advertising/outcomes")) {
+      outcomeRequests.push(request.url());
+    }
+  });
+  const sessionResponse = page.waitForResponse("**/api/v1/playback/sessions");
+
+  await page.goto("/izle/kiyidaki-sessizlik");
+
+  const session = playbackResponseSchema.parse((await (await sessionResponse).json()) as unknown);
+  expect(session.data.advertising).toBeNull();
+  await expect(page.locator("mux-player")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Filmi başlat" })).toHaveCount(0);
+  expect(optionalRequests).toEqual([]);
+  expect(outcomeRequests).toEqual([]);
+  expect(
+    await page.evaluate(() => `${JSON.stringify(localStorage)}${JSON.stringify(sessionStorage)}`),
+  ).not.toMatch(/google-ima|doubleclick|NON_PERSONALIZED|PERSONALIZED/u);
+});
+
+test("non-personalized consent plays one visual preroll and hands off to content", async ({
+  page,
+}, testInfo) => {
+  requirePublicJourneyViewport(testInfo.project.name);
+  await page.setExtraHTTPHeaders({ "x-film-test-consent": "NON_PERSONALIZED" });
+  let sessionRequests = 0;
+  const optionalRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/v1/playback/sessions")) {
+      sessionRequests += 1;
+    }
+    if (isOptionalAdProviderRequest(request.url())) {
+      optionalRequests.push(request.url());
+    }
+  });
+  const sessionResponse = page.waitForResponse("**/api/v1/playback/sessions");
+  const outcomeResponse = page.waitForResponse("**/api/v1/advertising/outcomes");
+
+  await page.goto("/izle/kiyidaki-sessizlik");
+
+  const session = playbackResponseSchema.parse((await (await sessionResponse).json()) as unknown);
+  expect(session.data.advertising).toMatchObject({
+    fixtureScenario: "completed",
+    personalized: false,
+    placement: "preroll",
+    provider: "google-ima",
+  });
+  const tag = new URL(session.data.advertising?.tagUrl ?? "");
+  expect(tag.hostname).toBe("pubads.g.doubleclick.net");
+  expect(tag.searchParams.get("npa")).toBe("1");
+  expect(tag.href).not.toMatch(/email|movie|title|user/u);
+
+  const player = page.locator("mux-player");
+  await player.evaluate((element) => Reflect.set(element, "muted", true));
+  await page.getByRole("button", { name: "Filmi başlat" }).click();
+  await expect(page.locator(".watch-ad-fixture")).toBeVisible();
+  await expectAccessible(page);
+  await expect(page).toHaveScreenshot("watch-preroll.png", { fullPage: true });
+
+  const outcome = await outcomeResponse;
+  expect(outcome.status()).toBe(204);
+  expect(outcomeRequestSchema.parse(outcome.request().postDataJSON())).toEqual({
+    outcome: "completed",
+    sessionId: expect.stringMatching(/^ps_[a-zA-Z0-9]+$/u),
+  });
+  await expect(page.locator(".watch-ad-fixture")).toHaveCount(0);
+  await expect
+    .poll(() => player.evaluate((element) => Reflect.get(element, "currentTime")))
+    .toBeGreaterThan(0);
+  expect(sessionRequests).toBe(1);
+  expect(optionalRequests).toEqual([]);
+  expect(
+    await page.evaluate(() => `${JSON.stringify(localStorage)}${JSON.stringify(sessionStorage)}`),
+  ).not.toContain(tag.href);
+});
+
+for (const scenario of ["blocked", "empty", "error", "timeout"] as const) {
+  test(`${scenario} preroll fails open once without a session loop`, async ({ page }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "chromium-mobile",
+      "Failure handoff is viewport-independent.",
+    );
+    await page.setExtraHTTPHeaders({ "x-film-test-consent": "NON_PERSONALIZED" });
+    let sessionRequests = 0;
+    const optionalRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().endsWith("/api/v1/playback/sessions")) {
+        sessionRequests += 1;
+      }
+      if (isOptionalAdProviderRequest(request.url())) {
+        optionalRequests.push(request.url());
+      }
+    });
+    await page.route("**/api/v1/playback/sessions", async (route) => {
+      const response = await route.fetch();
+      const parsed = playbackResponseSchema.parse((await response.json()) as unknown);
+      if (parsed.data.advertising === null) {
+        throw new Error("Expected a fake advertising opportunity");
+      }
+      await route.fulfill({
+        response,
+        json: {
+          ...parsed,
+          data: {
+            ...parsed.data,
+            advertising: { ...parsed.data.advertising, fixtureScenario: scenario },
+          },
+        },
+      });
+    });
+    const outcomeResponse = page.waitForResponse("**/api/v1/advertising/outcomes");
+
+    await page.goto("/izle/kiyidaki-sessizlik");
+    const player = page.locator("mux-player");
+    await player.evaluate((element) => Reflect.set(element, "muted", true));
+    await page.getByRole("button", { name: "Filmi başlat" }).click();
+
+    const outcome = await outcomeResponse;
+    expect(outcomeRequestSchema.parse(outcome.request().postDataJSON())).toMatchObject({
+      outcome: scenario,
+    });
+    await expect
+      .poll(() => player.evaluate((element) => Reflect.get(element, "currentTime")))
+      .toBeGreaterThan(0);
+    expect(sessionRequests).toBe(1);
+    expect(optionalRequests).toEqual([]);
+    await expect(page.getByRole("button", { name: "Yeniden dene" })).toHaveCount(0);
+  });
+}

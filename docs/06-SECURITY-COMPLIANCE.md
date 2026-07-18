@@ -148,6 +148,7 @@ Start CSP changes in report-only mode with automated route coverage, then enforc
 ## Advertising And Consent
 
 - Production advertising is blocked until a legally reviewed consent-management approach is selected and recorded in an ADR.
+- [Proposed ADR 0004](adr/0004-production-consent-selection-gate.md) records the current production-disabled gate and candidate approaches; it is not a CMP selection or legal approval.
 - The playback JSON body never self-asserts consent. A server-side consent adapter verifies the selected CMP representation and returns the owned states `UNKNOWN`, `DENIED`, `NON_PERSONALIZED`, or `PERSONALIZED`; invalid or missing state maps to `UNKNOWN` and initializes no optional advertising.
 - Before consent, initialize only storage and requests classified as strictly necessary. Advertising and personalization default off when consent state is absent or invalid.
 - When advertising is allowed but personalization is not, request the provider's documented non-personalized mode.

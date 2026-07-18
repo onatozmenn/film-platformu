@@ -9,6 +9,7 @@ ADRs preserve decisions whose reversal would change architecture, security, prov
 | [0001](0001-modular-monolith-and-managed-media.md) | Accepted | Modular monolith with PostgreSQL and managed media/provider adapters |
 | [0002](0002-free-playback-and-single-preroll.md) | Accepted | Free visitor playback with optional accounts and one preroll opportunity |
 | [0003](0003-midnight-programme-hybrid-design.md) | Accepted | One original design system synthesized from surface-specific film references |
+| [0004](0004-production-consent-selection-gate.md) | Proposed | Keep production ads disabled until owner/legal CMP selection and review |
 
 ## Process
 
