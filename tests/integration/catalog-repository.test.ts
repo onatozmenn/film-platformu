@@ -89,6 +89,9 @@ describe("Prisma catalog query", () => {
       { label: "Oyuncular", names: ["Nehir Ekin", "Mert Alaz", "Duru İlhan"] },
     ]);
     expect(detail?.similarMovies).toHaveLength(5);
+
+    const watchableDetail = await query.getMovieBySlug("kiyidaki-sessizlik");
+    expect(watchableDetail?.subtitleLanguages).toEqual(["English", "Türkçe"]);
   });
 
   it("searches normalized titles, original titles, and credited people with a bounded suggestion contract", async () => {

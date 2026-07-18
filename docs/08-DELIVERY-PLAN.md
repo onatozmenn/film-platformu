@@ -136,12 +136,12 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Scope
 
-- [ ] Implement video asset, subtitle, content-right, and webhook-idempotency records and migrations.
-- [ ] Implement pure watchability policy with injected clock and trusted territory resolver.
-- [ ] Implement `VideoProvider`, Mux adapter, deterministic fake, playback-session endpoint, and private/no-store response policy.
-- [ ] Build the 16:9 watch experience with Mux Player, captions, loading, denied, provider-error, and retry behavior.
-- [ ] Implement verified/idempotent Mux webhook state mapping.
-- [ ] Add token-leak, rights-boundary, territory, asset-state, webhook, CSP, and player browser tests.
+- [x] Implement video asset, subtitle, content-right, and webhook-idempotency records and migrations.
+- [x] Implement pure watchability policy with injected clock and trusted territory resolver.
+- [x] Implement `VideoProvider`, Mux adapter, deterministic fake, playback-session endpoint, and private/no-store response policy.
+- [x] Build the 16:9 watch experience with Mux Player, captions, loading, denied, provider-error, and retry behavior.
+- [x] Implement verified/idempotent Mux webhook state mapping.
+- [x] Add token-leak, rights-boundary, territory, asset-state, webhook, CSP, and player browser tests.
 
 ### Acceptance
 
@@ -153,7 +153,16 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Active after the validated WP-02 persistent catalog. No WP-03 acceptance item is complete yet.
+- Persistence and policy: [`prisma/migrations/20260718215331_licensed_guest_playback/migration.sql`](../prisma/migrations/20260718215331_licensed_guest_playback/migration.sql) adds assets, subtitle tracks, rights, and webhook IDs with partial uniqueness, active-ready, valid-window, and contradictory-overlap constraints. [`src/modules/playback/domain/watchability.ts`](../src/modules/playback/domain/watchability.ts) owns publication, trusted-territory, half-open rights, and active-ready policy using one injected clock.
+- Application/provider boundaries: [`src/modules/playback/application/create-playback-session.ts`](../src/modules/playback/application/create-playback-session.ts) caps grants at five minutes and the rights end, bounds signing at two seconds, and creates opaque nonpersisted sessions. The owned port has deterministic fake and official Mux SDK adapters; synthetic RSA/HMAC contracts cover signed JWT claims, raw-body signatures, exact 300-second skew, malformed data, and coarse failures without committed credentials.
+- Routes and UI: [`src/app/api/v1/playback/sessions/route.ts`](../src/app/api/v1/playback/sessions/route.ts) strictly accepts only `movieId`, validates same origin/host, applies a bounded request budget, resolves territory server-side, and returns private no-store sessions. [`src/app/api/webhooks/mux/route.ts`](../src/app/api/webhooks/mux/route.ts) bounds and verifies raw bodies. [`src/app/(watch)/izle/[slug]/page.tsx`](../src/app/(watch)/izle/[slug]/page.tsx) and [`src/modules/playback/ui`](../src/modules/playback/ui) provide the route-isolated 16:9 player, captions, loading, denied, failure, and explicit retry states with no autoplay.
+- Deterministic media: [`public/fixtures/playback/ATTRIBUTION.md`](../public/fixtures/playback/ATTRIBUTION.md) records the original FFmpeg test pattern/audio and Turkish WebVTT fixture. It contains no film footage, third-party music, provider ID, or personal data and is disabled as a production grant source.
+- Database evidence: 16 PostgreSQL tests cover empty-to-current replay, exact active/default constraints, contradictory rights, seeded eligible/expired/draft mapping, verified unknown assets, duplicate delivery, and monotonic CREATED/READY/ERRORED/DISABLED transitions. The test seed wrapper now forces its validated `_test` URL into both database variables, preventing persistent shell state from targeting development.
+- Local validation on 2026-07-19: formatting, zero-warning lint, strict typecheck, and production build passed; 127 unit/component/route/provider tests passed; coverage passed at 85.5% statements, 76.48% branches, 86.8% functions, and 85.85% lines, with watchability at 100% statements/branches/functions/lines and 22/22 branches; `db:check` reported three applied migrations and current schema; 47 Playwright checks passed across four viewports with 21 intentional skips; non-watch routes remained at 160.3 KB gzip JavaScript and 7.7 KB gzip CSS.
+- Visual/accessibility evidence: [mobile playing with captions](../tests/e2e/__screenshots__/chromium-mobile/watch-ready.png), [desktop playing with captions](../tests/e2e/__screenshots__/chromium-desktop/watch-ready.png), [mobile loading](../tests/e2e/__screenshots__/chromium-mobile/watch-loading.png), [desktop loading](../tests/e2e/__screenshots__/chromium-desktop/watch-loading.png), [mobile unavailable](../tests/e2e/__screenshots__/chromium-mobile/watch-unavailable.png), and [desktop unavailable](../tests/e2e/__screenshots__/chromium-desktop/watch-unavailable.png). Browser checks prove nonblank media pixels, native controls, text tracks, axe, responsive fit, and stable request-ID support copy.
+- Security/content impact: caller territory/consent/asset/provider fields are rejected; untrusted geo headers are ignored; missing production territory and provider uncertainty fail closed; grants are absent from app URLs, storage, logs, and client bundles; Mux credentials remain server-only; direct draft detail/watch routes return HTTP 404; CSP names explicit Mux media/image origins in report-only rollout without wildcard sources.
+- External provider evidence: no operator staging Mux credentials were available, so a live staging asset/grant was not invoked. The official SDK path is cryptographically contract-tested and production stays unavailable until `VIDEO_PROVIDER=mux` plus the complete credential set is supplied.
+- Remote validation: pending the WP-03 commit CI run; WP-04 remains blocked until it passes.
 
 ## WP-04 Preroll Advertising And Consent
 

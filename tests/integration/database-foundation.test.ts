@@ -34,7 +34,7 @@ describe("database foundation", () => {
     expect(result).toEqual([{ value: 1 }]);
   });
 
-  it("contains exactly the WP-02 catalog tables", async () => {
+  it("contains exactly the active WP-03 catalog and playback tables", async () => {
     const tables = await client.$queryRaw<Array<{ tableName: string }>>`
       SELECT table_name AS "tableName"
       FROM information_schema.tables
@@ -46,12 +46,16 @@ describe("database foundation", () => {
     expect(tables.map(({ tableName }) => tableName)).toEqual([
       "collection_movies",
       "collections",
+      "content_rights",
       "credits",
       "genres",
       "metadata_sources",
       "movie_genres",
       "movies",
       "people",
+      "processed_webhooks",
+      "subtitle_tracks",
+      "video_assets",
     ]);
   });
 });

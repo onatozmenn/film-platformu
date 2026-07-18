@@ -30,6 +30,23 @@ enum MetadataProvider {
   TMDB
 }
 
+enum VideoProvider {
+  MUX
+}
+
+enum VideoAssetState {
+  PREPARING
+  READY
+  ERRORED
+  DISABLED
+}
+
+enum SubtitleKind {
+  SUBTITLES
+  CAPTIONS
+  FORCED
+}
+
 model Movie {
   id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   slug                  String            @unique(map: "movies_slug_key") @db.VarChar(96)
@@ -60,10 +77,14 @@ model Movie {
   credits               Credit[]
   collections           CollectionMovie[]
   metadataSources       MetadataSource[]
+  videoAssets           VideoAsset[]
+  contentRights         ContentRight[]
 
   @@index([publicationState, publishAt], map: "movies_publication_state_publish_at_idx")
   @@index([releaseDate], map: "movies_release_date_idx")
   @@index([addedAt], map: "movies_added_at_idx")
+  @@index([titleSearch(ops: raw("gin_trgm_ops"))], type: Gin, map: "movies_title_search_trgm_idx")
+  @@index([originalTitleSearch(ops: raw("gin_trgm_ops"))], type: Gin, map: "movies_original_title_search_trgm_idx")
   @@map("movies")
 }
 
@@ -100,6 +121,7 @@ model Person {
   credits          Credit[]
 
   @@unique([provider, providerPersonId], map: "people_provider_provider_person_id_key")
+  @@index([nameSearch(ops: raw("gin_trgm_ops"))], type: Gin, map: "people_name_search_trgm_idx")
   @@map("people")
 }
 
@@ -159,4 +181,70 @@ model MetadataSource {
   @@unique([provider, externalId], map: "metadata_sources_provider_external_id_key")
   @@index([movieId], map: "metadata_sources_movie_id_idx")
   @@map("metadata_sources")
+}
+
+model VideoAsset {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  movieId            String          @map("movie_id") @db.Uuid
+  provider           VideoProvider
+  providerAssetId    String          @map("provider_asset_id") @db.VarChar(120)
+  providerPlaybackId String?         @map("provider_playback_id") @db.VarChar(120)
+  state              VideoAssetState @default(PREPARING)
+  durationSeconds    Int?            @map("duration_seconds")
+  width              Int?
+  height             Int?
+  isActive           Boolean         @default(false) @map("is_active")
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  movie              Movie           @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  subtitleTracks     SubtitleTrack[]
+
+  @@unique([provider, providerAssetId], map: "video_assets_provider_provider_asset_id_key")
+  @@unique([provider, providerPlaybackId], map: "video_assets_provider_provider_playback_id_key")
+  @@index([movieId, state], map: "video_assets_movie_id_state_idx")
+  @@map("video_assets")
+}
+
+model SubtitleTrack {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  videoAssetId    String       @map("video_asset_id") @db.Uuid
+  languageTag     String       @map("language_tag") @db.VarChar(35)
+  label           String       @db.VarChar(80)
+  kind            SubtitleKind
+  providerTrackId String       @map("provider_track_id") @db.VarChar(120)
+  isDefault       Boolean      @default(false) @map("is_default")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  videoAsset      VideoAsset   @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([videoAssetId, languageTag, kind], map: "subtitle_tracks_asset_language_kind_key")
+  @@unique([videoAssetId, providerTrackId], map: "subtitle_tracks_asset_provider_track_id_key")
+  @@index([videoAssetId], map: "subtitle_tracks_video_asset_id_idx")
+  @@map("subtitle_tracks")
+}
+
+model ContentRight {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  movieId        String   @map("movie_id") @db.Uuid
+  territory      String   @db.Char(2)
+  startsAt       DateTime @map("starts_at") @db.Timestamptz(3)
+  endsAt         DateTime @map("ends_at") @db.Timestamptz(3)
+  allowStreaming Boolean  @map("allow_streaming")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  movie          Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId, territory, startsAt, endsAt], map: "content_rights_movie_territory_window_idx")
+  @@map("content_rights")
+}
+
+model ProcessedWebhook {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider        VideoProvider
+  providerEventId String        @unique(map: "processed_webhooks_provider_event_id_key") @map("provider_event_id") @db.VarChar(160)
+  eventType       String        @map("event_type") @db.VarChar(120)
+  processedAt     DateTime      @default(now()) @map("processed_at") @db.Timestamptz(3)
+
+  @@index([processedAt], map: "processed_webhooks_processed_at_idx")
+  @@map("processed_webhooks")
 }

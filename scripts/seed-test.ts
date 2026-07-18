@@ -8,6 +8,7 @@ if (!new URL(testDatabaseUrl).pathname.slice(1).endsWith("_test")) {
   throw new Error("Test seeding requires a database name ending in _test");
 }
 
+process.env.DATABASE_URL = testDatabaseUrl;
 process.env.TEST_DATABASE_URL = testDatabaseUrl;
 
 void import("../prisma/seed").catch((error: unknown) => {

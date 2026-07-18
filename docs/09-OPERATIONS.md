@@ -42,6 +42,12 @@ Maintain the exact variable names and requirement matrix in `.env.example` and t
 | `TRUST_INCOMING_REQUEST_ID` | Server | Defaults to `false`; enable only behind infrastructure that overwrites and validates `X-Request-Id`. |
 | `TMDB_ENABLED` | Server | Defaults to `false`; token presence alone never enables metadata requests. |
 | `TMDB_API_TOKEN` | Server | Required only when `TMDB_ENABLED=true`; never exposed to browser bundles or logs. |
+| `VIDEO_PROVIDER` | Server | Defaults to deterministic `fake`; fake grants are disabled under `NODE_ENV=production`. Production playback selects `mux`, which requires the complete credential set below. |
+| `SUPPORTED_TERRITORIES` | Server | Comma-separated ISO 3166-1 alpha-2 allowlist; defaults to `TR`. |
+| `LOCAL_DEFAULT_TERRITORY` | Server | Explicit non-production fallback; must be supported and is rejected under `NODE_ENV=production`. |
+| `MUX_TOKEN_ID`, `MUX_TOKEN_SECRET` | Server | Mux management credentials, required only when `VIDEO_PROVIDER=mux`. |
+| `MUX_WEBHOOK_SECRET` | Server | Mux webhook verification secret, required only when `VIDEO_PROVIDER=mux`. |
+| `MUX_SIGNING_KEY_ID`, `MUX_SIGNING_PRIVATE_KEY` | Server | Signed-playback credentials, required only when `VIDEO_PROVIDER=mux`; private key stays server-only. |
 
 Provider-specific variables are added to this matrix by their owning work package. Presence alone never enables an integration.
 

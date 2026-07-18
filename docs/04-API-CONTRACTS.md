@@ -124,6 +124,8 @@ Response:
 
 `advertising` is `null` when ads are disabled by environment, consent policy, frequency policy, or provider configuration. An ad load error after this response does not trigger another session request automatically.
 
+The deterministic non-production video fake may append `fixtureSourceUrl` and `fixtureTextTracks` under `playback` so browser tests can play an owned local asset. These fields are absent from Mux grants and are rejected as configuration in production; they never accept caller-provided URLs.
+
 ### Update Member Progress
 
 `PUT /api/v1/me/progress/:movieId`

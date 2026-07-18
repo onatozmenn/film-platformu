@@ -69,12 +69,16 @@ describe("catalog migration replay", () => {
       expect(tables.map(({ tableName }) => tableName)).toEqual([
         "collection_movies",
         "collections",
+        "content_rights",
         "credits",
         "genres",
         "metadata_sources",
         "movie_genres",
         "movies",
         "people",
+        "processed_webhooks",
+        "subtitle_tracks",
+        "video_assets",
       ]);
     } finally {
       await replayClient.$disconnect();

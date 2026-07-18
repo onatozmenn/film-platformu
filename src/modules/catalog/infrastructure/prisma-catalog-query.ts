@@ -56,6 +56,7 @@ type MovieWithDetail = Prisma.MovieGetPayload<{
   include: {
     credits: { include: { person: true } };
     genres: { include: { genre: true } };
+    videoAssets: { include: { subtitleTracks: true } };
   };
 }>;
 
@@ -304,6 +305,10 @@ export function createPrismaCatalogQuery(
         include: {
           credits: { include: { person: true } },
           genres: { include: { genre: true } },
+          videoAssets: {
+            where: { isActive: true },
+            include: { subtitleTracks: { orderBy: { languageTag: "asc" } } },
+          },
         },
       });
 
@@ -342,7 +347,9 @@ export function createPrismaCatalogQuery(
         originalTitle: movie.originalTitle,
         rating: null,
         similarMovies,
-        subtitleLanguages: [],
+        subtitleLanguages: movie.videoAssets.flatMap((asset) =>
+          asset.subtitleTracks.map((track) => track.label),
+        ),
       };
     },
 

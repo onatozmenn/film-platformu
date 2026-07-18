@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { MovieDetailScreen, parseMovieSlug } from "@/modules/catalog";
 import { catalogQueries } from "@/modules/catalog/server";
+import { playbackService, territoryResolver } from "@/modules/playback/server";
 
 type MoviePageProps = Readonly<{ params: Promise<{ slug: string }> }>;
 
@@ -30,5 +32,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
     notFound();
   }
 
-  return <MovieDetailScreen movie={movie} />;
+  const territory = territoryResolver.resolve(await headers());
+  const availability = await playbackService.inspectAvailability(movie.id, territory);
+
+  return <MovieDetailScreen movie={{ ...movie, isPlayable: availability.available }} />;
 }

@@ -108,6 +108,7 @@ function deterministicUuid(prefix: string, index: number): string {
 
 async function resetCatalog(client: PrismaClient): Promise<void> {
   await client.$transaction([
+    client.processedWebhook.deleteMany(),
     client.metadataSource.deleteMany(),
     client.collectionMovie.deleteMany(),
     client.collection.deleteMany(),
@@ -323,6 +324,107 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
       titleSearch: normalizeCatalogSearchText(movie.title),
     })),
   });
+
+  await client.videoAsset.create({
+    data: {
+      id: "40000000-0000-4000-8000-000000000001",
+      durationSeconds: 5_880,
+      height: 360,
+      isActive: true,
+      movieId: "00000000-0000-4000-8000-000000000001",
+      provider: "MUX",
+      providerAssetId: "fake-asset-kiyidaki-sessizlik",
+      providerPlaybackId: "fake-playback-kiyidaki-sessizlik",
+      state: "READY",
+      width: 640,
+      subtitleTracks: {
+        create: [
+          {
+            id: "42000000-0000-4000-8000-000000000001",
+            isDefault: true,
+            kind: "SUBTITLES",
+            label: "Türkçe",
+            languageTag: "tr",
+            providerTrackId: "fake-track-tr",
+          },
+          {
+            id: "42000000-0000-4000-8000-000000000002",
+            kind: "SUBTITLES",
+            label: "English",
+            languageTag: "en",
+            providerTrackId: "fake-track-en",
+          },
+        ],
+      },
+    },
+  });
+  await client.contentRight.create({
+    data: {
+      allowStreaming: true,
+      endsAt: new Date("2035-01-01T00:00:00.000Z"),
+      id: "41000000-0000-4000-8000-000000000001",
+      movieId: "00000000-0000-4000-8000-000000000001",
+      startsAt: new Date("2026-01-01T00:00:00.000Z"),
+      territory: "TR",
+    },
+  });
+
+  await client.videoAsset.create({
+    data: {
+      id: "40000000-0000-4000-8000-000000000002",
+      durationSeconds: 5_520,
+      isActive: true,
+      movieId: "00000000-0000-4000-8000-000000000006",
+      provider: "MUX",
+      providerAssetId: "fake-asset-expired-rights",
+      providerPlaybackId: "fake-playback-expired-rights",
+      state: "READY",
+    },
+  });
+  await client.contentRight.create({
+    data: {
+      allowStreaming: true,
+      endsAt: new Date("2021-01-01T00:00:00.000Z"),
+      id: "41000000-0000-4000-8000-000000000002",
+      movieId: "00000000-0000-4000-8000-000000000006",
+      startsAt: new Date("2020-01-01T00:00:00.000Z"),
+      territory: "TR",
+    },
+  });
+
+  await client.videoAsset.create({
+    data: {
+      id: "40000000-0000-4000-8000-000000000003",
+      durationSeconds: 6_660,
+      isActive: true,
+      movieId: "00000000-0000-4000-8000-000000000002",
+      provider: "MUX",
+      providerAssetId: "fake-asset-provider-error",
+      providerPlaybackId: "fake-playback-provider-error",
+      state: "READY",
+    },
+  });
+  await client.contentRight.create({
+    data: {
+      allowStreaming: true,
+      endsAt: new Date("2035-01-01T00:00:00.000Z"),
+      id: "41000000-0000-4000-8000-000000000003",
+      movieId: "00000000-0000-4000-8000-000000000002",
+      startsAt: new Date("2026-01-01T00:00:00.000Z"),
+      territory: "TR",
+    },
+  });
+
+  await client.videoAsset.create({
+    data: {
+      id: "40000000-0000-4000-8000-000000000004",
+      isActive: false,
+      movieId: "00000000-0000-4000-8000-000000000101",
+      provider: "MUX",
+      providerAssetId: "fake-asset-draft-preparing",
+      state: "PREPARING",
+    },
+  });
 }
 
 async function main(): Promise<void> {
@@ -331,12 +433,20 @@ async function main(): Promise<void> {
   }
   const environment = parseServerEnvironment({
     DATABASE_URL: process.env.DATABASE_URL ?? process.env.TEST_DATABASE_URL,
+    LOCAL_DEFAULT_TERRITORY: process.env.LOCAL_DEFAULT_TERRITORY,
     LOG_LEVEL: process.env.LOG_LEVEL,
+    MUX_SIGNING_KEY_ID: process.env.MUX_SIGNING_KEY_ID,
+    MUX_SIGNING_PRIVATE_KEY: process.env.MUX_SIGNING_PRIVATE_KEY,
+    MUX_TOKEN_ID: process.env.MUX_TOKEN_ID,
+    MUX_TOKEN_SECRET: process.env.MUX_TOKEN_SECRET,
+    MUX_WEBHOOK_SECRET: process.env.MUX_WEBHOOK_SECRET,
     NODE_ENV: process.env.NODE_ENV,
     SITE_ORIGIN: process.env.SITE_ORIGIN,
+    SUPPORTED_TERRITORIES: process.env.SUPPORTED_TERRITORIES,
     TMDB_API_TOKEN: process.env.TMDB_API_TOKEN,
     TMDB_ENABLED: process.env.TMDB_ENABLED,
     TRUST_INCOMING_REQUEST_ID: process.env.TRUST_INCOMING_REQUEST_ID,
+    VIDEO_PROVIDER: process.env.VIDEO_PROVIDER,
   });
   const client = createDatabaseClient(environment.databaseUrl);
 

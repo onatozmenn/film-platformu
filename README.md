@@ -54,8 +54,9 @@ Available discovery routes:
 - `/filmler` filters and paginates the fictional catalog by genre/year through URL parameters.
 - `/arama?q=` searches and paginates fictional title, original-title, and credited-person data with keyboard suggestions.
 - `/film/[slug]` renders editorial detail, optional metadata, and deterministic similar films.
+- `/izle/[slug]` requests a private, territory-checked playback session and renders the route-isolated Mux Player experience.
 
-WP-01 deliberately fails closed for playback: no fixture detail exposes an `/izle` action until WP-03 introduces rights and provider policy. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md).
+WP-03 exposes an `/izle` action only when fresh publication, trusted-territory rights, and active-ready asset policy passes. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md); owned playback fixture provenance is recorded in [`public/fixtures/playback/ATTRIBUTION.md`](public/fixtures/playback/ATTRIBUTION.md).
 
 Health endpoints:
 
@@ -80,7 +81,7 @@ pnpm check:budgets
 
 `pnpm check:budgets` requires an existing production build plus Chromium and starts an isolated production server to enforce the public-route gzip targets.
 
-TMDB metadata support is disabled by default and its synthetic contract tests make no live request. No Mux, TMDB, email, advertising, or production credential is required for local discovery.
+TMDB metadata support is disabled by default and its synthetic contract tests make no live request. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. No Mux, TMDB, email, advertising, or production credential is required for local discovery and playback tests.
 
 ## Content Boundary
 

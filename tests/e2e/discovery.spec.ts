@@ -256,4 +256,8 @@ test("draft, scheduled, future, and unpublished records stay out of sitemap and 
   const hiddenResponse = await page.goto("/film/kurgu-masasinda");
   expect(hiddenResponse?.status()).toBe(404);
   await expect(page.getByRole("heading", { name: "Bu sayfa programda yok" })).toBeVisible();
+
+  const hiddenWatchResponse = await page.goto("/izle/kurgu-masasinda");
+  expect(hiddenWatchResponse?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "Bu sayfa programda yok" })).toBeVisible();
 });
