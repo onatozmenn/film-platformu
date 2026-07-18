@@ -1,7 +1,7 @@
 # Delivery Plan
 
 Status: **Execution source of truth**  
-Active work package: **WP-01 Visual Catalog With Deterministic Fixtures**
+Active work package: **WP-02 Persistent Catalog And Search**
 
 ## Execution Rules
 
@@ -97,7 +97,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 - Performance/bundle evidence: [`scripts/check-client-budgets.ts`](../scripts/check-client-budgets.ts) measured actual production Chromium requests at 160.2 KB gzip JavaScript and 7.4 KB gzip CSS for home, catalog, search, and detail. Public bundle checks found no Mux Player, Google IMA, or Auth.js code.
 - Security/content impact: URL, slug, suggestion limit, and API payload boundaries are validated; search suggestions expose only the owned public contract; all fixture films/people are fictional; no provider ID, stream, production credential, feature table, or arbitrary remote image URL was added.
 - Known WP-02 boundary: public reads still use the fixture adapter; catalog persistence, publication visibility policy, database search, cache tags, and TMDB adapter remain blocked until WP-01 remote CI passes and WP-02 activates.
-- Pending activation gate: the pushed GitHub Actions run must pass before `Active work package` moves to WP-02.
+- Remote validation: GitHub Actions [CI run 29656587853](https://github.com/onatozmenn/film-platformu/actions/runs/29656587853) passed on Node 24 and PostgreSQL 18.3 for commit `91d5f59`, including frozen install, formatting, lint, typecheck, unit/coverage, integration, database, production build, public-route asset budgets, and the four-viewport browser suite.
 
 ## WP-02 Persistent Catalog And Search
 
@@ -121,7 +121,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Blocked by WP-01.
+Active after the validated WP-01 visual catalog. No WP-02 acceptance item is complete yet.
 
 ## WP-03 Licensed Guest Playback
 

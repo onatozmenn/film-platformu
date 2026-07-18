@@ -100,7 +100,7 @@ Rollback means restoring the prior root extract and reverting the linked contrac
 
 ## Follow-Up
 
-- [ ] WP-00 implements canonical tokens/fonts without loading source reference files into runtime output.
-- [ ] WP-01 builds and visually verifies home, rail, catalog, search, and detail blueprints.
+- [x] WP-00 implements canonical tokens/fonts without loading source reference files into runtime output.
+- [x] WP-01 builds and visually verifies home, rail, catalog, search, and detail blueprints.
 - [ ] WP-03 verifies the media-stage/player states.
 - [ ] WP-06 verifies the operational admin mode.

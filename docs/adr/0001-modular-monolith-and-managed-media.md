@@ -76,5 +76,5 @@ This is the initial architecture, so no migration is required. Each provider int
 
 ## Follow-Up
 
-- [ ] WP-00 creates the application shell, import boundaries, environment split, and database foundation.
+- [x] WP-00 creates the application shell, import boundaries, environment split, and database foundation.
 - [ ] Each provider package records its exact version and sandbox verification in its introducing work package.
