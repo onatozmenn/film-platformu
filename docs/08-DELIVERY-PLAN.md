@@ -72,12 +72,12 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Scope
 
-- [ ] Build navigation, mobile menu, search layer, footer, buttons, poster item, badges, rating display, state patterns, and image placeholders.
-- [ ] Build the photographic hero using an explicitly licensed/local fixture and preserve a hint of the next section.
-- [ ] Build home rows, responsive poster grid, URL-driven catalog filters, search results/suggestions, and film detail.
-- [ ] Add loading, empty, partial, error, unavailable, offline, keyboard, and reduced-motion behavior.
-- [ ] Add responsive screenshots and accessibility tests from `docs/05-DESIGN-SYSTEM.md` and `docs/design/SCREEN-BLUEPRINTS.md`.
-- [ ] Keep all data behind a catalog query port so fixtures can be replaced in WP-02.
+- [x] Build navigation, mobile menu, search layer, footer, buttons, poster item, badges, rating display, state patterns, and image placeholders.
+- [x] Build the photographic hero using an explicitly licensed/local fixture and preserve a hint of the next section.
+- [x] Build home rows, responsive poster grid, URL-driven catalog filters, search results/suggestions, and film detail.
+- [x] Add loading, empty, partial, error, unavailable, offline, keyboard, and reduced-motion behavior.
+- [x] Add responsive screenshots and accessibility tests from `docs/05-DESIGN-SYSTEM.md` and `docs/design/SCREEN-BLUEPRINTS.md`.
+- [x] Keep all data behind a catalog query port so fixtures can be replaced in WP-02.
 
 ### Acceptance
 
@@ -88,7 +88,16 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Active after the validated WP-00 foundation. No WP-01 acceptance item is complete yet.
+- Query boundary and deterministic fixtures: [`src/modules/catalog/application/catalog-query-port.ts`](../src/modules/catalog/application/catalog-query-port.ts), [`src/modules/catalog/application/catalog-queries.ts`](../src/modules/catalog/application/catalog-queries.ts), and [`src/modules/catalog/infrastructure/fixture-catalog-query.ts`](../src/modules/catalog/infrastructure/fixture-catalog-query.ts).
+- Public routes and UI: [`src/app/(public)`](../src/app/(public)), [`src/modules/catalog/ui`](../src/modules/catalog/ui), and the strict suggestion handler at [`src/app/api/v1/search/suggestions/route.ts`](../src/app/api/v1/search/suggestions/route.ts).
+- Local imagery: four vendored Library of Congress photographs with source/right statements in [`public/fixtures/catalog/ATTRIBUTION.md`](../public/fixtures/catalog/ATTRIBUTION.md); six films deliberately exercise the typographic missing-art placeholder.
+- Representative visual evidence: [mobile home](../tests/e2e/__screenshots__/chromium-mobile/home-discovery.png), [desktop home](../tests/e2e/__screenshots__/chromium-desktop/home-discovery.png), [mobile filter sheet](../tests/e2e/__screenshots__/chromium-mobile/catalog-filter-sheet.png), [empty catalog](../tests/e2e/__screenshots__/chromium-desktop/catalog-empty.png), [search suggestions](../tests/e2e/__screenshots__/chromium-mobile/search-suggestions.png), [search results](../tests/e2e/__screenshots__/chromium-desktop/search-results.png), [long unavailable detail](../tests/e2e/__screenshots__/chromium-mobile/detail-long-unavailable.png), [partial detail](../tests/e2e/__screenshots__/chromium-desktop/detail-partial.png), [ranked rail](../tests/e2e/__screenshots__/chromium-desktop/rail-ranked.png), and [focused rail end](../tests/e2e/__screenshots__/chromium-desktop/rail-end-focus.png). Tablet and wide equivalents are committed beside them.
+- Local validation on 2026-07-18: frozen install, formatting, zero-warning lint, strict typecheck, and production build passed; 49 unit/component/route tests passed; coverage passed at 85.63% statements, 77.15% branches, 86.46% functions, and 86.01% lines; 2 PostgreSQL foundation tests and `db:check` passed; 34 Playwright checks passed across 360x800, 768x1024, 1440x900, and 1920x1080 with 10 intentional viewport skips.
+- Accessibility/state evidence: axe reported no serious/critical issue; browser checks cover keyboard suggestions, responsive sheets, focus return, rail beginning/middle/end/rank/focus, 320 CSS-pixel long-title fit, reduced motion, offline content preservation, loading/empty/partial/unavailable states, image load, and horizontal overflow.
+- Performance/bundle evidence: [`scripts/check-client-budgets.ts`](../scripts/check-client-budgets.ts) measured actual production Chromium requests at 160.2 KB gzip JavaScript and 7.4 KB gzip CSS for home, catalog, search, and detail. Public bundle checks found no Mux Player, Google IMA, or Auth.js code.
+- Security/content impact: URL, slug, suggestion limit, and API payload boundaries are validated; search suggestions expose only the owned public contract; all fixture films/people are fictional; no provider ID, stream, production credential, feature table, or arbitrary remote image URL was added.
+- Known WP-02 boundary: public reads still use the fixture adapter; catalog persistence, publication visibility policy, database search, cache tags, and TMDB adapter remain blocked until WP-01 remote CI passes and WP-02 activates.
+- Pending activation gate: the pushed GitHub Actions run must pass before `Active work package` moves to WP-02.
 
 ## WP-02 Persistent Catalog And Search
 

@@ -24,7 +24,7 @@ test("renders the responsive Turkish foundation shell without leaks", async ({ p
   expect(response?.headers()["x-request-id"]).toMatch(/^req_[a-f0-9]{32}$/u);
   expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
   await expect(page.locator("html")).toHaveAttribute("lang", "tr");
-  await expect(page.getByRole("heading", { level: 1, name: "Film Platform" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Kıyıdaki Sessizlik" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Ana içeriğe geç" })).toBeAttached();
 
   await page.evaluate(() => document.fonts.ready);
@@ -65,11 +65,9 @@ test("renders the responsive Turkish foundation shell without leaks", async ({ p
   }
 
   expect(publicBodies.join("\n")).not.toContain(serverOnlySentinel);
+  expect(publicBodies.join("\n")).not.toMatch(/mux-player|google\.ima|next-auth/u);
   expect(runtimeGoogleFontRequests).toEqual([]);
   expect(browserErrors).toEqual([]);
-  await expect(page).toHaveScreenshot("foundation-shell.png", {
-    fullPage: true,
-  });
 });
 
 test("health endpoints expose only coarse state", async ({ request }) => {

@@ -2,7 +2,7 @@
 
 Film Platform is a Turkish-first, ad-supported discovery and streaming product for films the operator owns or is licensed to distribute. Visitors can watch without an account; optional membership adds a watchlist, half-star ratings, and synchronized progress.
 
-The repository now contains the WP-00 application foundation: a strict Next.js modular monolith shell, PostgreSQL/Prisma connectivity, health boundaries, deterministic tests, and CI. Catalog features begin in WP-01.
+The repository now contains the WP-00 application foundation and the WP-01 fixture-backed visual catalog: responsive home rails, URL-driven catalog filters, keyboard search, and film detail screens. PostgreSQL-backed catalog persistence begins in WP-02.
 
 ## Fixed MVP Decisions
 
@@ -48,6 +48,15 @@ pnpm dev
 
 The application is available at `http://localhost:3000`. PostgreSQL binds only to `127.0.0.1:54329`; the Compose project creates separate `film_platform` and `film_platform_test` databases. Stop local services with `pnpm db:down`.
 
+Available discovery routes:
+
+- `/` shows the photographic featured film and curated/ranked rails.
+- `/filmler` filters the fictional catalog by genre/year and sorts through URL parameters.
+- `/arama?q=` searches fictional title, original-title, and credited-person data with keyboard suggestions.
+- `/film/[slug]` renders editorial detail, optional metadata, and deterministic similar films.
+
+WP-01 deliberately fails closed for playback: no fixture detail exposes an `/izle` action until WP-03 introduces rights and provider policy. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md).
+
 Health endpoints:
 
 - `GET /api/health/live` proves that the process can answer without checking dependencies.
@@ -64,9 +73,12 @@ pnpm test:integration
 pnpm db:check
 pnpm build
 pnpm test:e2e
+pnpm check:budgets
 ```
 
 `pnpm test:integration` applies checked-in migrations only to a database whose name ends in `_test`. Browser tests start the app with deterministic configuration and verify mobile/desktop visuals, accessibility, runtime font hosting, health responses, and client-bundle secret separation.
+
+`pnpm check:budgets` requires an existing production build plus Chromium and starts an isolated production server to enforce the public-route gzip targets.
 
 Provider integrations remain disabled until their owning work packages. No Mux, TMDB, email, advertising, or production credential is required for WP-00.
 

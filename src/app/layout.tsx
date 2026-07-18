@@ -39,7 +39,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className={`${dmSans.variable} ${sourceSerif.variable}`} lang="tr">
+    <html
+      className={`${dmSans.variable} ${sourceSerif.variable}`}
+      data-scroll-behavior="smooth"
+      lang="tr"
+    >
       <body>{children}</body>
     </html>
   );

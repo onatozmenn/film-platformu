@@ -21,6 +21,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "check:budgets": "tsx scripts/check-client-budgets.ts",
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose down",
     "db:format": "prisma format",
@@ -33,6 +34,8 @@
   "dependencies": {
     "@prisma/adapter-pg": "7.8.0",
     "@prisma/client": "7.8.0",
+    "@radix-ui/react-dialog": "1.1.19",
+    "lucide-react": "1.25.0",
     "next": "16.2.10",
     "pg": "8.22.0",
     "react": "19.2.4",

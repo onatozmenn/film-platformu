@@ -30,6 +30,20 @@ export default defineConfig({
         viewport: { height: 900, width: 1440 },
       },
     },
+    {
+      name: "chromium-tablet",
+      use: {
+        browserName: "chromium",
+        viewport: { height: 1024, width: 768 },
+      },
+    },
+    {
+      name: "chromium-wide",
+      use: {
+        browserName: "chromium",
+        viewport: { height: 1080, width: 1920 },
+      },
+    },
   ],
   reporter: [["line"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   retries: process.env.CI ? 1 : 0,
