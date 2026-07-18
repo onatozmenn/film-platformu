@@ -1,7 +1,7 @@
 # Delivery Plan
 
 Status: **Execution source of truth**  
-Active work package: **WP-00 Foundation**
+Active work package: **WP-01 Visual Catalog With Deterministic Fixtures**
 
 ## Execution Rules
 
@@ -62,9 +62,9 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 - Configuration/HTTP boundaries: [`.env.example`](../.env.example), [`src/proxy.ts`](../src/proxy.ts), [`src/shared/http/problem-details.ts`](../src/shared/http/problem-details.ts), and health handlers under [`src/app/api/health`](../src/app/api/health).
 - Database: [`compose.yaml`](../compose.yaml), [`prisma/schema.prisma`](../prisma/schema.prisma), the empty foundation migration, and PostgreSQL integration coverage in [`tests/integration/database-foundation.test.ts`](../tests/integration/database-foundation.test.ts).
 - Browser evidence: [360x800 shell](../tests/e2e/__screenshots__/chromium-mobile/foundation-shell.png) and [1440x900 shell](../tests/e2e/__screenshots__/chromium-desktop/foundation-shell.png), exercised by [`tests/e2e/foundation.spec.ts`](../tests/e2e/foundation.spec.ts).
-- Local validation on 2026-07-18: frozen install passed; formatting, lint, and strict typecheck passed; 15 unit/component tests passed; 2 PostgreSQL integration tests passed; `db:check` reported one applied migration and current schema; production build passed; 6 Playwright checks passed across both required viewports with no serious/critical axe violations, browser console errors, Google Fonts requests, horizontal overflow, or server-sentinel leakage.
+- Local validation on 2026-07-18: frozen install passed; formatting, lint, and strict typecheck passed; 15 unit/component tests passed; coverage passed at 88.7% statements, 82.85% branches, 90% functions, and 90% lines; 2 PostgreSQL integration tests passed; `db:check` reported one applied migration and current schema; production build passed; 6 Playwright checks passed across both required viewports with no serious/critical axe violations, browser console errors, Google Fonts requests, horizontal overflow, or server-sentinel leakage.
 - Security/content impact: no provider or production secret is required or committed; only `NEXT_PUBLIC_SITE_NAME` reaches browser configuration; no film, artwork, playback URL, or feature table exists in WP-00.
-- Pending activation gate: the first pushed GitHub Actions execution must pass before `Active work package` moves to WP-01.
+- Remote validation: GitHub Actions [CI run 29649763811](https://github.com/onatozmenn/film-platformu/actions/runs/29649763811) passed on Node 24 and PostgreSQL 18.3 for commit `9ab7795`, including frozen install, formatting, lint, typecheck, unit, integration, database, build, and browser gates.
 
 ## WP-01 Visual Catalog With Deterministic Fixtures
 
@@ -88,7 +88,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Blocked by WP-00.
+Active after the validated WP-00 foundation. No WP-01 acceptance item is complete yet.
 
 ## WP-02 Persistent Catalog And Search
 
