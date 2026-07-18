@@ -1,7 +1,7 @@
 # Delivery Plan
 
 Status: **Execution source of truth**  
-Active work package: **WP-02 Persistent Catalog And Search**
+Active work package: **WP-03 Licensed Guest Playback**
 
 ## Execution Rules
 
@@ -128,7 +128,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 - Local validation on 2026-07-18: formatting, zero-warning lint, strict typecheck, and production build passed; 69 unit/component/provider tests passed; 10 PostgreSQL migration/repository tests passed after deterministic reseeding; `db:check` reported two applied migrations and current schema; 38 Playwright checks passed across four viewports with 10 intentional skips; production routes measured 160.3 KB gzip JavaScript and 7.4 KB gzip CSS against 180/60 KB budgets.
 - Migration/operations impact: the migration is additive, enables `pg_trgm` in `public`, and needs no data backfill from the empty WP-00 schema. Constraint/index failures use a forward-fix migration; production rollout should observe migration lock duration and search latency. The supported test command now migrates and deterministically reseeds only a database ending in `_test`.
 - Security/content impact: draft, scheduled, future-publish, and unpublished records are absent from rows, search, suggestions, metadata, sitemap, and detail responses; hidden detail transport returns HTTP 404. TMDB accepts numeric IDs rather than arbitrary URLs, stores provider paths rather than credentials, uses a server-only authorization header, and exposes only coarse typed failures. No live provider call, production token, unlicensed image, or stream is required.
-- Remote validation: pending the WP-02 commit CI run; WP-03 remains blocked until it passes.
+- Remote validation: GitHub Actions [CI run 29661927266](https://github.com/onatozmenn/film-platformu/actions/runs/29661927266) passed on Node 24 and PostgreSQL 18.3 for commit `4530ff6`, including frozen install, formatting, lint, typecheck, 69 unit/component/provider tests, 10 migration/repository integration tests, database state, production build, public-route budgets, and the four-viewport browser suite.
 
 ## WP-03 Licensed Guest Playback
 
@@ -153,7 +153,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Blocked by WP-02.
+Active after the validated WP-02 persistent catalog. No WP-03 acceptance item is complete yet.
 
 ## WP-04 Preroll Advertising And Consent
 
