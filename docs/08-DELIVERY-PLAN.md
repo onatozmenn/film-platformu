@@ -1,7 +1,7 @@
 # Delivery Plan
 
 Status: **Execution source of truth**  
-Active work package: **WP-03 Licensed Guest Playback**
+Active work package: **WP-04 Preroll Advertising And Consent**
 
 ## Execution Rules
 
@@ -162,7 +162,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 - Visual/accessibility evidence: [mobile playing with captions](../tests/e2e/__screenshots__/chromium-mobile/watch-ready.png), [desktop playing with captions](../tests/e2e/__screenshots__/chromium-desktop/watch-ready.png), [mobile loading](../tests/e2e/__screenshots__/chromium-mobile/watch-loading.png), [desktop loading](../tests/e2e/__screenshots__/chromium-desktop/watch-loading.png), [mobile unavailable](../tests/e2e/__screenshots__/chromium-mobile/watch-unavailable.png), and [desktop unavailable](../tests/e2e/__screenshots__/chromium-desktop/watch-unavailable.png). Browser checks prove nonblank media pixels, native controls, text tracks, axe, responsive fit, and stable request-ID support copy.
 - Security/content impact: caller territory/consent/asset/provider fields are rejected; untrusted geo headers are ignored; missing production territory and provider uncertainty fail closed; grants are absent from app URLs, storage, logs, and client bundles; Mux credentials remain server-only; direct draft detail/watch routes return HTTP 404; CSP names explicit Mux media/image origins in report-only rollout without wildcard sources.
 - External provider evidence: no operator staging Mux credentials were available, so a live staging asset/grant was not invoked. The official SDK path is cryptographically contract-tested and production stays unavailable until `VIDEO_PROVIDER=mux` plus the complete credential set is supplied.
-- Remote validation: pending the WP-03 commit CI run; WP-04 remains blocked until it passes.
+- Remote validation: GitHub Actions [CI run 29664525875](https://github.com/onatozmenn/film-platformu/actions/runs/29664525875) passed on Node 24 and PostgreSQL 18.3 for commit `6ef147c`, including frozen install, migrations, formatting, lint, typecheck, 127 unit/component/provider tests, 16 PostgreSQL tests, database state, production build, public-route budgets, and the four-viewport browser suite.
 
 ## WP-04 Preroll Advertising And Consent
 
@@ -187,7 +187,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Blocked by WP-03 and owner/legal CMP decision.
+Active after validated WP-03 guest playback. Production advertising remains blocked until the owner supplies a legally reviewed CMP decision that can be accepted in the required consent-management ADR; deterministic local/test implementation may proceed without a production tag or optional tracking.
 
 ## WP-05 Optional Identity And Member Library
 
