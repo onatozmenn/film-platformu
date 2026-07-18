@@ -31,6 +31,18 @@ Configuration groups:
 
 Maintain the exact variable names and requirement matrix in `.env.example` and the environment schema once WP-00 introduces them. Never put real values in documentation.
 
+### Foundation Variables
+
+| Variable | Scope | WP-00 behavior |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_NAME` | Public | Optional display name; defaults to `Film Platform` and is the only browser-exposed configuration value. |
+| `DATABASE_URL` | Server | Required by the running application and database checks; must use a PostgreSQL URL. |
+| `TEST_DATABASE_URL` | Test process | Optional local override; integration migration refuses database names without the `_test` suffix. |
+| `LOG_LEVEL` | Server | Optional owned level: `debug`, `info`, `warn`, or `error`; defaults to `info`. |
+| `TRUST_INCOMING_REQUEST_ID` | Server | Defaults to `false`; enable only behind infrastructure that overwrites and validates `X-Request-Id`. |
+
+Provider-specific variables are added to this matrix by their owning work package. Presence alone never enables an integration.
+
 ## Local Operating Contract
 
 After WP-00, the documented path is:
@@ -38,11 +50,14 @@ After WP-00, the documented path is:
 ```bash
 corepack enable
 pnpm install --frozen-lockfile
+# Create .env from the placeholder-only .env.example.
 pnpm db:up
 pnpm db:migrate
 pnpm db:seed
 pnpm dev
 ```
+
+The supported local Compose project binds PostgreSQL to `127.0.0.1:54329` by default and creates isolated `film_platform` and `film_platform_test` databases. `pnpm test:integration` migrates only the `_test` database before running repository assertions.
 
 `pnpm db:up` may wrap the repository's supported local PostgreSQL container configuration. It must not require a globally installed database. Provider fakes are the default so local discovery and browser tests work without Mux, TMDB, email, Google IMA, or ad credentials.
 

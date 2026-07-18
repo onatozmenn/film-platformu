@@ -35,18 +35,18 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Scope
 
-- [ ] Scaffold current stable Next.js App Router with strict TypeScript and pnpm.
-- [ ] Pin Node/pnpm requirements and commit the lockfile.
-- [ ] Configure Tailwind CSS v4 and the canonical color/type/spacing tokens.
-- [ ] Load DM Sans and Source Serif 4 through `next/font/google` at weights 400/700 with swap behavior and Turkish glyph coverage; verify there is no runtime Google Fonts request.
-- [ ] Configure the single `tr-TR` locale, `<html lang="tr">`, Turkish routes without a locale prefix, and shared deterministic `Intl` formatters; do not add an i18n library.
-- [ ] Add ESLint, formatting, typecheck, Vitest, Testing Library, and Playwright foundations.
-- [ ] Add Prisma/PostgreSQL with an initial connection check but no speculative feature tables.
-- [ ] Add strict server/public environment parsing and a placeholder-only `.env.example`.
-- [ ] Create health routes, request ID propagation, structured redacted logging, and base Problem Details helpers.
-- [ ] Add CI for frozen install, lint, typecheck, unit test, database check, build, and one browser smoke test.
-- [ ] Create the documented module and route directories only when they receive a real file.
-- [ ] Add a minimal app shell that proves fonts, tokens, metadata, not-found, and global error handling.
+- [x] Scaffold current stable Next.js App Router with strict TypeScript and pnpm.
+- [x] Pin Node/pnpm requirements and commit the lockfile.
+- [x] Configure Tailwind CSS v4 and the canonical color/type/spacing tokens.
+- [x] Load DM Sans and Source Serif 4 through `next/font/google` at weights 400/700 with swap behavior and Turkish glyph coverage; verify there is no runtime Google Fonts request.
+- [x] Configure the single `tr-TR` locale, `<html lang="tr">`, Turkish routes without a locale prefix, and shared deterministic `Intl` formatters; do not add an i18n library.
+- [x] Add ESLint, formatting, typecheck, Vitest, Testing Library, and Playwright foundations.
+- [x] Add Prisma/PostgreSQL with an initial connection check but no speculative feature tables.
+- [x] Add strict server/public environment parsing and a placeholder-only `.env.example`.
+- [x] Create health routes, request ID propagation, structured redacted logging, and base Problem Details helpers.
+- [x] Add CI for frozen install, lint, typecheck, unit test, database check, build, and one browser smoke test.
+- [x] Create the documented module and route directories only when they receive a real file.
+- [x] Add a minimal app shell that proves fonts, tokens, metadata, not-found, and global error handling.
 
 ### Acceptance
 
@@ -58,7 +58,13 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Not yet implemented.
+- Application/toolchain: [`package.json`](../package.json), [`src/app/layout.tsx`](../src/app/layout.tsx), [`src/app/globals.css`](../src/app/globals.css), and [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
+- Configuration/HTTP boundaries: [`.env.example`](../.env.example), [`src/proxy.ts`](../src/proxy.ts), [`src/shared/http/problem-details.ts`](../src/shared/http/problem-details.ts), and health handlers under [`src/app/api/health`](../src/app/api/health).
+- Database: [`compose.yaml`](../compose.yaml), [`prisma/schema.prisma`](../prisma/schema.prisma), the empty foundation migration, and PostgreSQL integration coverage in [`tests/integration/database-foundation.test.ts`](../tests/integration/database-foundation.test.ts).
+- Browser evidence: [360x800 shell](../tests/e2e/__screenshots__/chromium-mobile/foundation-shell.png) and [1440x900 shell](../tests/e2e/__screenshots__/chromium-desktop/foundation-shell.png), exercised by [`tests/e2e/foundation.spec.ts`](../tests/e2e/foundation.spec.ts).
+- Local validation on 2026-07-18: frozen install passed; formatting, lint, and strict typecheck passed; 15 unit/component tests passed; 2 PostgreSQL integration tests passed; `db:check` reported one applied migration and current schema; production build passed; 6 Playwright checks passed across both required viewports with no serious/critical axe violations, browser console errors, Google Fonts requests, horizontal overflow, or server-sentinel leakage.
+- Security/content impact: no provider or production secret is required or committed; only `NEXT_PUBLIC_SITE_NAME` reaches browser configuration; no film, artwork, playback URL, or feature table exists in WP-00.
+- Pending activation gate: the first pushed GitHub Actions execution must pass before `Active work package` moves to WP-01.
 
 ## WP-01 Visual Catalog With Deterministic Fixtures
 

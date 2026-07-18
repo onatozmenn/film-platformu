@@ -1,0 +1,24 @@
+name: film-platform
+
+services:
+  postgres:
+    image: postgres:18.3-alpine
+    environment:
+      POSTGRES_DB: film_platform
+      POSTGRES_PASSWORD: film
+      POSTGRES_USER: film
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U film -d film_platform"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-54329}:5432"
+    restart: unless-stopped
+    volumes:
+      - film-postgres:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  film-postgres:

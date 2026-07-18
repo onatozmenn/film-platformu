@@ -1,0 +1,1 @@
+-- WP-00 establishes migration history without introducing feature tables.

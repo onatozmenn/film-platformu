@@ -2,7 +2,7 @@
 
 Film Platform is a Turkish-first, ad-supported discovery and streaming product for films the operator owns or is licensed to distribute. Visitors can watch without an account; optional membership adds a watchlist, half-star ratings, and synchronized progress.
 
-This repository currently contains the **engineering specification only**. Application code has not been scaffolded. The first implementation target is `WP-00 Foundation` in the delivery plan.
+The repository now contains the WP-00 application foundation: a strict Next.js modular monolith shell, PostgreSQL/Prisma connectivity, health boundaries, deterministic tests, and CI. Catalog features begin in WP-01.
 
 ## Fixed MVP Decisions
 
@@ -33,9 +33,9 @@ Coding agents must begin with [AGENTS.md](AGENTS.md). Humans can use this map:
 | [Operations](docs/09-OPERATIONS.md) | Environments, deployment, observability, runbooks |
 | [ADRs](docs/adr/README.md) | Accepted architecture and product decisions |
 
-## Implementation Start
+## Local Setup
 
-The first coding agent should implement only `WP-00 Foundation`. It must not start catalog, player, auth, advertising, or admin feature work early. Once WP-00 exists, this becomes the stable local interface:
+Prerequisites are Node.js 24 (see `.node-version`), Corepack, and Docker Desktop or another Docker Compose-compatible engine. Create a local `.env` from the placeholder-only `.env.example`, then run:
 
 ```bash
 corepack enable
@@ -46,7 +46,29 @@ pnpm db:seed
 pnpm dev
 ```
 
-Repository checks are defined in [Quality](docs/07-QUALITY.md). Commands become executable as their tools are introduced by WP-00.
+The application is available at `http://localhost:3000`. PostgreSQL binds only to `127.0.0.1:54329`; the Compose project creates separate `film_platform` and `film_platform_test` databases. Stop local services with `pnpm db:down`.
+
+Health endpoints:
+
+- `GET /api/health/live` proves that the process can answer without checking dependencies.
+- `GET /api/health/ready` performs a bounded database probe and returns only coarse state.
+
+## Quality Commands
+
+```bash
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:integration
+pnpm db:check
+pnpm build
+pnpm test:e2e
+```
+
+`pnpm test:integration` applies checked-in migrations only to a database whose name ends in `_test`. Browser tests start the app with deterministic configuration and verify mobile/desktop visuals, accessibility, runtime font hosting, health responses, and client-bundle secret separation.
+
+Provider integrations remain disabled until their owning work packages. No Mux, TMDB, email, advertising, or production credential is required for WP-00.
 
 ## Content Boundary
 
