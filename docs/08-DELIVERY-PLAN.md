@@ -1,0 +1,239 @@
+# Delivery Plan
+
+Status: **Execution source of truth**  
+Active work package: **WP-00 Foundation**
+
+## Execution Rules
+
+- Work on only the active package unless the owner explicitly changes priority.
+- Complete a vertical, demonstrable outcome; do not prebuild abstractions for later packages.
+- A checkbox is complete only when its repository evidence exists and the package validation passes.
+- Record evidence links and command results in the package's `Evidence` section before activating the next package.
+- Any change to product scope, stack, provider, module boundary, or release gate first updates the relevant document and, when required, an ADR.
+- Production credentials, real user data, unlicensed assets, and live ad tags are never prerequisites for local or CI completion.
+
+## Dependency Order
+
+```mermaid
+flowchart LR
+    WP00[WP-00 Foundation] --> WP01[WP-01 Visual Catalog]
+    WP01 --> WP02[WP-02 Persistent Catalog]
+    WP02 --> WP03[WP-03 Guest Playback]
+    WP03 --> WP04[WP-04 Preroll And Consent]
+    WP02 --> WP05[WP-05 Identity And Library]
+    WP03 --> WP06[WP-06 Admin Publication]
+    WP04 --> WP07[WP-07 Release Hardening]
+    WP05 --> WP07
+    WP06 --> WP07
+```
+
+WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and the owner explicitly splits work between agents. A single agent handles one package at a time.
+
+## WP-00 Foundation
+
+**Outcome:** A production-shaped, empty Next.js application can be installed, checked, tested, built, and connected to an isolated PostgreSQL database.
+
+### Scope
+
+- [ ] Scaffold current stable Next.js App Router with strict TypeScript and pnpm.
+- [ ] Pin Node/pnpm requirements and commit the lockfile.
+- [ ] Configure Tailwind CSS v4 and the canonical color/type/spacing tokens.
+- [ ] Load DM Sans and Source Serif 4 through `next/font/google` at weights 400/700 with swap behavior and Turkish glyph coverage; verify there is no runtime Google Fonts request.
+- [ ] Configure the single `tr-TR` locale, `<html lang="tr">`, Turkish routes without a locale prefix, and shared deterministic `Intl` formatters; do not add an i18n library.
+- [ ] Add ESLint, formatting, typecheck, Vitest, Testing Library, and Playwright foundations.
+- [ ] Add Prisma/PostgreSQL with an initial connection check but no speculative feature tables.
+- [ ] Add strict server/public environment parsing and a placeholder-only `.env.example`.
+- [ ] Create health routes, request ID propagation, structured redacted logging, and base Problem Details helpers.
+- [ ] Add CI for frozen install, lint, typecheck, unit test, database check, build, and one browser smoke test.
+- [ ] Create the documented module and route directories only when they receive a real file.
+- [ ] Add a minimal app shell that proves fonts, tokens, metadata, not-found, and global error handling.
+
+### Acceptance
+
+- A clean checkout succeeds with the documented local setup.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and the smoke test pass.
+- `pnpm db:check` proves an isolated PostgreSQL connection and migration status.
+- The browser renders a responsive dark shell at 360x800 and 1440x900 with no console or accessibility errors.
+- Client bundles contain no server-only environment value.
+
+### Evidence
+
+Not yet implemented.
+
+## WP-01 Visual Catalog With Deterministic Fixtures
+
+**Outcome:** Visitors can navigate a polished, responsive home, catalog, search, and film-detail experience using fictional deterministic data.
+
+### Scope
+
+- [ ] Build navigation, mobile menu, search layer, footer, buttons, poster item, badges, rating display, state patterns, and image placeholders.
+- [ ] Build the photographic hero using an explicitly licensed/local fixture and preserve a hint of the next section.
+- [ ] Build home rows, responsive poster grid, URL-driven catalog filters, search results/suggestions, and film detail.
+- [ ] Add loading, empty, partial, error, unavailable, offline, keyboard, and reduced-motion behavior.
+- [ ] Add responsive screenshots and accessibility tests from `docs/05-DESIGN-SYSTEM.md` and `docs/design/SCREEN-BLUEPRINTS.md`.
+- [ ] Keep all data behind a catalog query port so fixtures can be replaced in WP-02.
+
+### Acceptance
+
+- Home, catalog, search, and detail match Midnight Programme in root `DESIGN.md`, the route composition in `docs/design/SCREEN-BLUEPRINTS.md`, and the executable constraints in `docs/05-DESIGN-SYSTEM.md` at required viewports.
+- Search and filters are keyboard operable, URL-backed, and refresh-safe.
+- No route loads player, Mux, IMA, auth, or admin code.
+- Visual regression, component, accessibility, lint, typecheck, and build checks pass.
+
+### Evidence
+
+Blocked by WP-00.
+
+## WP-02 Persistent Catalog And Search
+
+**Outcome:** Public discovery reads published catalog data from PostgreSQL with deterministic seeds and cache invalidation boundaries.
+
+### Scope
+
+- [ ] Implement catalog schema, migrations, constraints, indexes, and fictional seed data from `docs/03-DOMAIN-AND-DATA.md`.
+- [ ] Implement catalog repositories, read models, publication visibility policy, pagination, filters, and PostgreSQL title/person search.
+- [ ] Replace UI fixtures through the existing query port without changing page contracts.
+- [ ] Add TMDB metadata adapter behind a disabled-by-default server configuration using provider test fixtures.
+- [ ] Add public cache tags and invalidation service boundaries; keep draft and member data uncached.
+- [ ] Add empty-to-current migration tests and repository/query integration tests.
+
+### Acceptance
+
+- Draft and scheduled content never appears in public rows, search, sitemap, or metadata.
+- Seeded public journeys behave identically through database-backed queries.
+- Search relevance and p95 fixture performance meet the documented budget.
+- Migrations, constraints, integration tests, lint, typecheck, build, and browser discovery journey pass.
+
+### Evidence
+
+Blocked by WP-01.
+
+## WP-03 Licensed Guest Playback
+
+**Outcome:** A visitor can play a watchable seeded film through Mux signed playback without an account.
+
+### Scope
+
+- [ ] Implement video asset, subtitle, content-right, and webhook-idempotency records and migrations.
+- [ ] Implement pure watchability policy with injected clock and trusted territory resolver.
+- [ ] Implement `VideoProvider`, Mux adapter, deterministic fake, playback-session endpoint, and private/no-store response policy.
+- [ ] Build the 16:9 watch experience with Mux Player, captions, loading, denied, provider-error, and retry behavior.
+- [ ] Implement verified/idempotent Mux webhook state mapping.
+- [ ] Add token-leak, rights-boundary, territory, asset-state, webhook, CSP, and player browser tests.
+
+### Acceptance
+
+- All watchability policy branches pass, including exact time boundaries.
+- Eligible visitor playback works with provider fake and staging Mux; ineligible playback fails closed with safe copy.
+- Signed grants expire within policy and never appear in logs, URL, analytics, or persistent browser storage.
+- Invalid or duplicate webhooks cannot corrupt asset state.
+- Watch-page accessibility, responsive screenshots, nonblank-player checks, lint, typecheck, tests, and build pass.
+
+### Evidence
+
+Blocked by WP-02.
+
+## WP-04 Preroll Advertising And Consent
+
+**Outcome:** An eligible playback session offers at most one consent-aware Google IMA preroll and always reaches content when the ad path is unavailable.
+
+### Scope
+
+- [ ] Record the legally reviewed consent-management decision in a new ADR before production behavior is enabled.
+- [ ] Implement owned ad-decision types, server-side sanitized configuration, Google IMA adapter, and deterministic fake.
+- [ ] Load ad code only after consent and only on the watch route.
+- [ ] Implement personalized-denied mode, test-tag environments, empty-ad/error/timeout/blocked paths, and no-retry rule.
+- [ ] Add coarse privacy-safe ad outcome telemetry and CSP updates.
+- [ ] Add consent, storage, fail-open, bundle-boundary, and browser player/ad handoff tests.
+
+### Acceptance
+
+- Missing or denied advertising consent initializes no optional ad request/storage.
+- Non-personalized consent produces only the approved request mode.
+- No playback session gets more than one preroll opportunity; no midroll/postroll/overlay exists.
+- Every ad failure path reaches eligible content without a loop or blank player.
+- Production ad tags cannot load in local, test, or preview environments.
+
+### Evidence
+
+Blocked by WP-03 and owner/legal CMP decision.
+
+## WP-05 Optional Identity And Member Library
+
+**Outcome:** A visitor may become a member and synchronize watchlist, half-star ratings, and viewing progress without changing guest playback eligibility.
+
+### Scope
+
+- [ ] Implement Auth.js database sessions and a testable email-link provider adapter.
+- [ ] Implement profile/role, watchlist, rating, and progress schemas, constraints, repositories, and services.
+- [ ] Build sign-in callback/error, account, list, rating, continue-watching, clear-history, and sign-out experiences.
+- [ ] Implement throttled progress writes plus pause/visibility/page-exit flush behavior.
+- [ ] Implement immediate session revocation/account disablement, irreversible deletion requests, the idempotent 30-day purge command, and authenticated `/api/internal/run-retention` transport.
+- [ ] Add ownership, CSRF, stale-progress, completion, idempotency, session, privacy, accessibility, and member browser tests.
+
+### Acceptance
+
+- Guest playback still succeeds with auth provider unavailable.
+- Cross-user access is denied in application and query predicates.
+- Member actions persist across refresh/device sessions in tests; stale updates do not regress progress.
+- Email-link responses do not enumerate accounts and tokens never leak.
+- Member journey, security matrix, migrations, lint, typecheck, tests, and build pass.
+
+### Evidence
+
+Blocked by WP-02.
+
+## WP-06 Admin Publication And Audit
+
+**Outcome:** Editors and admins can safely take a film from draft to published and reverse it with complete authorization and audit evidence.
+
+### Scope
+
+- [ ] Implement typed admin commands, optimistic revisions, editorial forms, collections, credits, and preview.
+- [ ] Implement asset attach/reconcile, subtitle metadata, rights windows, scheduling, publication, and unpublication workflows.
+- [ ] Implement authenticated Vercel Cron invocation of the bounded/idempotent `PublishDueMovies` command, including system audit and failed-row retry behavior.
+- [ ] Implement role management with final-admin protection.
+- [ ] Implement immutable audit records and redacted audit viewer.
+- [ ] Add publication completeness, transaction, concurrency, authorization, audit, and admin browser tests.
+
+### Acceptance
+
+- Editor/admin capabilities exactly match the authorization matrix.
+- Invalid completeness, rights, schedule, or asset states cannot publish through UI or direct command calls.
+- Rights/role/publication mutations and audit events are atomic.
+- Early, duplicate, overlapping, and failed scheduled runs preserve state; an eligible exact-due film publishes once.
+- Published changes invalidate the intended public cache only after commit.
+- Admin journey, migrations, accessibility smoke, lint, typecheck, tests, and build pass.
+
+### Evidence
+
+Blocked by WP-03.
+
+## WP-07 Production Hardening And Launch
+
+**Outcome:** The product is deployable, observable, recoverable, legally configured, and demonstrably passes all release gates.
+
+### Scope
+
+- [ ] Finalize brand assets/copy, production metadata, legal pages, support/takedown route, and TMDB attribution.
+- [ ] Configure isolated production database, Mux, email, ad, consent, telemetry, domain, CSP, HSTS, rate limits, and secret manager values.
+- [ ] Configure and monitor production scheduled-publication and daily retention cron invocations with a dedicated secret.
+- [ ] Add deployment migration job, backup/restore verification, retention/deletion jobs, alerts, dashboards, and runbook links.
+- [ ] Run dependency, secret, rights, privacy, accessibility, visual, performance, migration, restore, and full browser checks.
+- [ ] Perform staging launch rehearsal, rollback/forward-fix exercise, and owner acceptance.
+
+### Acceptance
+
+- Every owner input in `docs/01-PRODUCT.md` is resolved and documented without committing secrets.
+- Required security tests and all quality gates pass; no critical/high release-blocking finding remains.
+- A backup restore and account-deletion replay are demonstrated in a non-production environment.
+- Alerts reach an owner, runbooks are executable, and rollback/forward-fix paths are rehearsed.
+- Every playable production title has verified rights, territory, dates, ready asset, attribution, and owner approval.
+
+### Evidence
+
+Blocked by WP-04, WP-05, and WP-06.
+
+## Deferred Backlog
+
+These require separate product approval and ADRs after MVP evidence: midroll advertising, subscriptions/payments, DRM titles, public reviews, casting, offline playback, multi-region storefronts, dedicated search service, queues/workers, recommendation models, and native apps.
