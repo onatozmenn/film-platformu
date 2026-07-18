@@ -105,12 +105,12 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Scope
 
-- [ ] Implement catalog schema, migrations, constraints, indexes, and fictional seed data from `docs/03-DOMAIN-AND-DATA.md`.
-- [ ] Implement catalog repositories, read models, publication visibility policy, pagination, filters, and PostgreSQL title/person search.
-- [ ] Replace UI fixtures through the existing query port without changing page contracts.
-- [ ] Add TMDB metadata adapter behind a disabled-by-default server configuration using provider test fixtures.
-- [ ] Add public cache tags and invalidation service boundaries; keep draft and member data uncached.
-- [ ] Add empty-to-current migration tests and repository/query integration tests.
+- [x] Implement catalog schema, migrations, constraints, indexes, and fictional seed data from `docs/03-DOMAIN-AND-DATA.md`.
+- [x] Implement catalog repositories, read models, publication visibility policy, pagination, filters, and PostgreSQL title/person search.
+- [x] Replace UI fixtures through the existing query port without changing page contracts.
+- [x] Add TMDB metadata adapter behind a disabled-by-default server configuration using provider test fixtures.
+- [x] Add public cache tags and invalidation service boundaries; keep draft and member data uncached.
+- [x] Add empty-to-current migration tests and repository/query integration tests.
 
 ### Acceptance
 
@@ -121,7 +121,14 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Active after the validated WP-01 visual catalog. No WP-02 acceptance item is complete yet.
+- Persistence and seed: [`prisma/schema.prisma`](../prisma/schema.prisma), [`prisma/migrations/20260718185925_persistent_catalog/migration.sql`](../prisma/migrations/20260718185925_persistent_catalog/migration.sql), and [`prisma/seed.ts`](../prisma/seed.ts) define the additive catalog model, reviewed PostgreSQL checks/indexes, ten public fictional films, and four concealed lifecycle fixtures.
+- Public query path: [`src/modules/catalog/infrastructure/prisma-catalog-query.ts`](../src/modules/catalog/infrastructure/prisma-catalog-query.ts) applies one publication predicate to home, catalog, detail, title/original-title/person search, and suggestions; [`src/shared/pagination/page.ts`](../src/shared/pagination/page.ts) bounds catalog/search pages at 24 records while preserving validated URL state.
+- Provider/cache boundaries: [`src/modules/catalog/application/metadata-provider-port.ts`](../src/modules/catalog/application/metadata-provider-port.ts), the synthetic-fixture-tested TMDB adapter, disabled factory, server composition, public cache tags, and [`src/modules/catalog/infrastructure/next-catalog-cache.ts`](../src/modules/catalog/infrastructure/next-catalog-cache.ts). `TMDB_ENABLED` defaults to `false`; token presence alone cannot make a request.
+- Database evidence: [`tests/integration/catalog-migration.test.ts`](../tests/integration/catalog-migration.test.ts) replays empty-to-current migration in an isolated schema; [`tests/integration/catalog-repository.test.ts`](../tests/integration/catalog-repository.test.ts) covers hidden lifecycle states, constraints/indexes, deterministic mapping, bounded pagination, title/original-title/person relevance, and warm suggestion p95 below 250 ms.
+- Local validation on 2026-07-18: formatting, zero-warning lint, strict typecheck, and production build passed; 69 unit/component/provider tests passed; 10 PostgreSQL migration/repository tests passed after deterministic reseeding; `db:check` reported two applied migrations and current schema; 38 Playwright checks passed across four viewports with 10 intentional skips; production routes measured 160.3 KB gzip JavaScript and 7.4 KB gzip CSS against 180/60 KB budgets.
+- Migration/operations impact: the migration is additive, enables `pg_trgm` in `public`, and needs no data backfill from the empty WP-00 schema. Constraint/index failures use a forward-fix migration; production rollout should observe migration lock duration and search latency. The supported test command now migrates and deterministically reseeds only a database ending in `_test`.
+- Security/content impact: draft, scheduled, future-publish, and unpublished records are absent from rows, search, suggestions, metadata, sitemap, and detail responses; hidden detail transport returns HTTP 404. TMDB accepts numeric IDs rather than arbitrary URLs, stores provider paths rather than credentials, uses a server-only authorization header, and exposes only coarse typed failures. No live provider call, production token, unlicensed image, or stream is required.
+- Remote validation: pending the WP-02 commit CI run; WP-03 remains blocked until it passes.
 
 ## WP-03 Licensed Guest Playback
 

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
-import { CatalogScreen, catalogQueries, parseCatalogFilters } from "@/modules/catalog";
+import { CatalogScreen, parseCatalogFilters } from "@/modules/catalog";
 import type { CatalogSearchParams } from "@/modules/catalog";
+import { catalogQueries } from "@/modules/catalog/server";
 
 export const metadata: Metadata = {
   title: "Filmler",

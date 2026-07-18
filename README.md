@@ -51,8 +51,8 @@ The application is available at `http://localhost:3000`. PostgreSQL binds only t
 Available discovery routes:
 
 - `/` shows the photographic featured film and curated/ranked rails.
-- `/filmler` filters the fictional catalog by genre/year and sorts through URL parameters.
-- `/arama?q=` searches fictional title, original-title, and credited-person data with keyboard suggestions.
+- `/filmler` filters and paginates the fictional catalog by genre/year through URL parameters.
+- `/arama?q=` searches and paginates fictional title, original-title, and credited-person data with keyboard suggestions.
 - `/film/[slug]` renders editorial detail, optional metadata, and deterministic similar films.
 
 WP-01 deliberately fails closed for playback: no fixture detail exposes an `/izle` action until WP-03 introduces rights and provider policy. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md).
@@ -80,7 +80,7 @@ pnpm check:budgets
 
 `pnpm check:budgets` requires an existing production build plus Chromium and starts an isolated production server to enforce the public-route gzip targets.
 
-Provider integrations remain disabled until their owning work packages. No Mux, TMDB, email, advertising, or production credential is required for WP-00.
+TMDB metadata support is disabled by default and its synthetic contract tests make no live request. No Mux, TMDB, email, advertising, or production credential is required for local discovery.
 
 ## Content Boundary
 

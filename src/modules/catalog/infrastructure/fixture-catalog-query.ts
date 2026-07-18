@@ -8,6 +8,7 @@ import type {
   SearchPageView,
   SearchSuggestion,
 } from "../application/catalog-query-port";
+import { createPageInfo, paginate } from "@/shared/pagination/page";
 
 type FixtureMovie = MovieCardView &
   Readonly<{
@@ -473,13 +474,15 @@ export const fixtureCatalogQuery: CatalogQueryPort = {
       availableYears: [...new Set(allMovies.map((movie) => movie.year))].sort(
         (left, right) => right - left,
       ),
-      movies: sorted.map(toCard),
+      movies: paginate(sorted, createPageInfo(sorted.length, filters.page)).map(toCard),
+      pageInfo: createPageInfo(sorted.length, filters.page),
       total: sorted.length,
     };
   },
-  searchMovies: async (query: string): Promise<SearchPageView> => {
+  searchMovies: async (query: string, requestedPage: number): Promise<SearchPageView> => {
     const results = allMovies.filter((movie) => matchesSearch(movie, query)).map(toCard);
-    return { movies: results, total: results.length };
+    const pageInfo = createPageInfo(results.length, requestedPage);
+    return { movies: paginate(results, pageInfo), pageInfo, total: results.length };
   },
   suggestMovies: async (query: string, limit: number): Promise<readonly SearchSuggestion[]> =>
     allMovies

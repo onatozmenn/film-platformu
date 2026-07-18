@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
-import { catalogQueries, normalizeSearchQuery, parseSuggestionLimit } from "@/modules/catalog";
+import { normalizeSearchQuery, parseSuggestionLimit } from "@/modules/catalog";
+import { catalogQueries } from "@/modules/catalog/server";
 import { createRequestId, requestIdHeader } from "@/shared/http/request-id";
 import { problemResponse } from "@/shared/http/problem-details";
 

@@ -1,7 +1,22 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { GET } from "./route";
+
+vi.mock("@/modules/catalog/server", () => ({
+  catalogQueries: {
+    suggestMovies: async () => [
+      {
+        id: "00000000-0000-4000-8000-000000000007",
+        kind: "movie",
+        poster: null,
+        slug: "ay-isiginda-son-istasyon",
+        title: "Ay Işığında Son İstasyon",
+        year: 2026,
+      },
+    ],
+  },
+}));
 
 describe("search suggestions route", () => {
   it("returns the narrow suggestion contract with cache and request headers", async () => {

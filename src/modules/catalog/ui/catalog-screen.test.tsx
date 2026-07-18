@@ -8,6 +8,7 @@ const emptyView: CatalogPageView = {
   availableGenres: [{ name: "Dram", slug: "dram" }],
   availableYears: [2026],
   movies: [],
+  pageInfo: { page: 1, pageSize: 24, totalPages: 1 },
   total: 0,
 };
 
@@ -15,7 +16,7 @@ describe("CatalogScreen", () => {
   it("keeps active filters visible in the no-results state", () => {
     render(
       <CatalogScreen
-        filters={{ genre: "dram", sort: "editor-secimi", year: 2026 }}
+        filters={{ genre: "dram", page: 1, sort: "editor-secimi", year: 2026 }}
         view={emptyView}
       />,
     );
@@ -35,7 +36,7 @@ describe("CatalogScreen", () => {
   it("renders populated results without an active-filter region", () => {
     render(
       <CatalogScreen
-        filters={{ genre: null, sort: "editor-secimi", year: null }}
+        filters={{ genre: null, page: 1, sort: "editor-secimi", year: null }}
         view={{
           ...emptyView,
           movies: [
@@ -56,5 +57,28 @@ describe("CatalogScreen", () => {
     expect(screen.getByText("1 sonuç")).toBeVisible();
     expect(screen.queryByLabelText("Etkin filtreler")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Kıyıdaki Sessizlik/u })).toBeVisible();
+  });
+
+  it("preserves filters in pagination links", () => {
+    render(
+      <CatalogScreen
+        filters={{ genre: "dram", page: 2, sort: "puan", year: 2026 }}
+        view={{
+          ...emptyView,
+          pageInfo: { page: 2, pageSize: 24, totalPages: 3 },
+          total: 49,
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Önceki sayfa" })).toHaveAttribute(
+      "href",
+      "/filmler?tur=dram&yil=2026&siralama=puan",
+    );
+    expect(screen.getByRole("link", { name: "Sonraki sayfa" })).toHaveAttribute(
+      "href",
+      "/filmler?tur=dram&yil=2026&siralama=puan&sayfa=3",
+    );
+    expect(screen.getByText("Sayfa 2 / 3")).toBeVisible();
   });
 });

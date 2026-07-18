@@ -11,7 +11,7 @@ describe("CatalogFilterControls", () => {
       <CatalogFilterControls
         availableGenres={[{ name: "Dram", slug: "dram" }]}
         availableYears={[2026]}
-        filters={{ genre: null, sort: "editor-secimi", year: null }}
+        filters={{ genre: null, page: 1, sort: "editor-secimi", year: null }}
       />,
     );
     const trigger = screen.getByRole("button", { name: "Filtreler" });

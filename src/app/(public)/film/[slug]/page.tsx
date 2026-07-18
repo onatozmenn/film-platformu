@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { MovieDetailScreen, catalogQueries, parseMovieSlug } from "@/modules/catalog";
+import { MovieDetailScreen, parseMovieSlug } from "@/modules/catalog";
+import { catalogQueries } from "@/modules/catalog/server";
 
 type MoviePageProps = Readonly<{ params: Promise<{ slug: string }> }>;
 
@@ -9,9 +10,11 @@ export async function generateMetadata({ params }: MoviePageProps): Promise<Meta
   const slug = parseMovieSlug((await params).slug);
   const movie = slug === null ? null : await catalogQueries.getMovieBySlug(slug);
 
-  return movie === null
-    ? { title: "Film bulunamadı" }
-    : { title: movie.title, description: movie.synopsis };
+  if (movie === null) {
+    notFound();
+  }
+
+  return { title: movie.title, description: movie.synopsis };
 }
 
 export default async function MoviePage({ params }: MoviePageProps) {

@@ -64,9 +64,14 @@ describe("catalog queries", () => {
         availableGenres: [],
         availableYears: [],
         movies: [],
+        pageInfo: { page: 1, pageSize: 24, totalPages: 1 },
         total: 0,
       }),
-      searchMovies: async () => ({ movies: [], total: 0 }),
+      searchMovies: async () => ({
+        movies: [],
+        pageInfo: { page: 1, pageSize: 24, totalPages: 1 },
+        total: 0,
+      }),
       suggestMovies: async () => [],
     };
 

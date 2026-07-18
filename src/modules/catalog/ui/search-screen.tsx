@@ -1,8 +1,9 @@
 import { formatNumber } from "@/shared/i18n/formatters";
 
 import type { SearchPageView } from "../application/catalog-query-port";
-import type { SearchQueryState } from "../application/search-query";
+import { createSearchHref, type SearchQueryState } from "../application/search-query";
 import { MoviePosterItem } from "./movie-poster-item";
+import { PaginationNav } from "./pagination-nav";
 import { SearchCombobox } from "./search-combobox";
 
 export function SearchScreen({
@@ -38,6 +39,10 @@ export function SearchScreen({
                 <MoviePosterItem eager={index === 0} movie={movie} key={movie.id} />
               ))}
             </div>
+            <PaginationNav
+              hrefForPage={(page) => createSearchHref(queryState.query, page)}
+              pageInfo={view.pageInfo}
+            />
           </section>
         )}
       </div>

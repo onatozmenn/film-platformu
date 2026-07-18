@@ -1,0 +1,51 @@
+{
+  "backdrop_path": "/kiyi-backdrop.jpg",
+  "credits": {
+    "cast": [
+      {
+        "character": "Ada",
+        "id": 501,
+        "name": "Ece Derman",
+        "order": 0,
+        "profile_path": "/ece-profile.jpg"
+      }
+    ],
+    "crew": [
+      {
+        "id": 601,
+        "job": "Director",
+        "name": "Pelin Somer",
+        "profile_path": null
+      },
+      {
+        "id": 602,
+        "job": "Screenplay",
+        "name": "Baran Tunca",
+        "profile_path": null
+      },
+      {
+        "id": 603,
+        "job": "Sound",
+        "name": "Deniz Arda",
+        "profile_path": null
+      }
+    ]
+  },
+  "genres": [
+    {
+      "id": 18,
+      "name": "Dram"
+    },
+    {
+      "id": 9648,
+      "name": "Gizem"
+    }
+  ],
+  "id": 112233,
+  "original_title": "Kiyidaki Sessizlik",
+  "overview": "A sound recordist follows a forgotten coastal signal.",
+  "poster_path": "/kiyi-poster.jpg",
+  "release_date": "2026-02-14",
+  "runtime": 98,
+  "title": "Kıyıdaki Sessizlik"
+}

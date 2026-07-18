@@ -29,7 +29,11 @@ describe("SearchScreen", () => {
     render(
       <SearchScreen
         queryState={{ kind: "valid", query: "Olmayan Film" }}
-        view={{ movies: [], total: 0 }}
+        view={{
+          movies: [],
+          pageInfo: { page: 1, pageSize: 24, totalPages: 1 },
+          total: 0,
+        }}
       />,
     );
 
@@ -59,6 +63,7 @@ describe("SearchScreen", () => {
               year: 2026,
             },
           ],
+          pageInfo: { page: 1, pageSize: 24, totalPages: 1 },
           total: 1,
         }}
       />,

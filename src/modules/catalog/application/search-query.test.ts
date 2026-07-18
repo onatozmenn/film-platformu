@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeSearchQuery, parseSuggestionLimit } from "./search-query";
+import { createSearchHref, normalizeSearchQuery, parseSuggestionLimit } from "./search-query";
 
 describe("search query boundary", () => {
   it("normalizes whitespace and counts Unicode characters", () => {
@@ -23,5 +23,10 @@ describe("search query boundary", () => {
       kind: "too-long",
       query: "A".repeat(81),
     });
+  });
+
+  it("builds encoded search pagination links", () => {
+    expect(createSearchHref("Nehir Ekin", 1)).toBe("/arama?q=Nehir+Ekin");
+    expect(createSearchHref("Nehir Ekin", 2)).toBe("/arama?q=Nehir+Ekin&sayfa=2");
   });
 });

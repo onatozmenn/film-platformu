@@ -1,0 +1,16 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "adult": false,
+      "id": 112233,
+      "original_title": "Kiyidaki Sessizlik",
+      "overview": "A sound recordist follows a forgotten coastal signal.",
+      "poster_path": "/kiyi-poster.jpg",
+      "release_date": "2026-02-14",
+      "title": "Kıyıdaki Sessizlik"
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 1
+}

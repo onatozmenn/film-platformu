@@ -6,3 +6,157 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum PublicationState {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  UNPUBLISHED
+}
+
+enum CreditKind {
+  DIRECTOR
+  WRITER
+  CAST
+  OTHER
+}
+
+enum CollectionState {
+  DRAFT
+  PUBLISHED
+}
+
+enum MetadataProvider {
+  TMDB
+}
+
+model Movie {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                  String            @unique(map: "movies_slug_key") @db.VarChar(96)
+  title                 String            @db.VarChar(160)
+  titleSearch           String            @map("title_search") @db.VarChar(160)
+  originalTitle         String?           @map("original_title") @db.VarChar(160)
+  originalTitleSearch   String?           @map("original_title_search") @db.VarChar(160)
+  synopsis              String            @db.Text
+  releaseDate           DateTime          @map("release_date") @db.Date
+  runtimeMinutes        Int               @map("runtime_minutes")
+  ageRating             String?           @map("age_rating") @db.VarChar(32)
+  posterSrc             String?           @map("poster_src") @db.Text
+  posterAlt             String?           @map("poster_alt") @db.VarChar(240)
+  posterWidth           Int?              @map("poster_width")
+  posterHeight          Int?              @map("poster_height")
+  posterFocalPosition   String?           @map("poster_focal_position") @db.VarChar(32)
+  backdropSrc           String?           @map("backdrop_src") @db.Text
+  backdropAlt           String?           @map("backdrop_alt") @db.VarChar(240)
+  backdropWidth         Int?              @map("backdrop_width")
+  backdropHeight        Int?              @map("backdrop_height")
+  backdropFocalPosition String?           @map("backdrop_focal_position") @db.VarChar(32)
+  publicationState      PublicationState  @default(DRAFT) @map("publication_state")
+  publishAt             DateTime?         @map("publish_at") @db.Timestamptz(3)
+  addedAt               DateTime          @default(now()) @map("added_at") @db.Timestamptz(3)
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  genres                MovieGenre[]
+  credits               Credit[]
+  collections           CollectionMovie[]
+  metadataSources       MetadataSource[]
+
+  @@index([publicationState, publishAt], map: "movies_publication_state_publish_at_idx")
+  @@index([releaseDate], map: "movies_release_date_idx")
+  @@index([addedAt], map: "movies_added_at_idx")
+  @@map("movies")
+}
+
+model Genre {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug      String       @unique(map: "genres_slug_key") @db.VarChar(64)
+  name      String       @unique(map: "genres_name_key") @db.VarChar(80)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  movies    MovieGenre[]
+
+  @@map("genres")
+}
+
+model MovieGenre {
+  movieId String @map("movie_id") @db.Uuid
+  genreId String @map("genre_id") @db.Uuid
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Restrict)
+
+  @@id([movieId, genreId])
+  @@index([genreId], map: "movie_genres_genre_id_idx")
+  @@map("movie_genres")
+}
+
+model Person {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String            @db.VarChar(160)
+  nameSearch       String            @map("name_search") @db.VarChar(160)
+  provider         MetadataProvider?
+  providerPersonId String?           @map("provider_person_id") @db.VarChar(120)
+  profileImageSrc  String?           @map("profile_image_src") @db.Text
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  credits          Credit[]
+
+  @@unique([provider, providerPersonId], map: "people_provider_provider_person_id_key")
+  @@map("people")
+}
+
+model Credit {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  movieId       String     @map("movie_id") @db.Uuid
+  personId      String     @map("person_id") @db.Uuid
+  kind          CreditKind
+  characterName String?    @map("character_name") @db.VarChar(160)
+  displayLabel  String?    @map("display_label") @db.VarChar(80)
+  billingOrder  Int        @default(0) @map("billing_order")
+  movie         Movie      @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  person        Person     @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@index([movieId, kind, billingOrder], map: "credits_movie_id_kind_billing_order_idx")
+  @@index([personId], map: "credits_person_id_idx")
+  @@map("credits")
+}
+
+model Collection {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug         String            @unique(map: "collections_slug_key") @db.VarChar(96)
+  title        String            @db.VarChar(160)
+  description  String?           @db.Text
+  state        CollectionState   @default(DRAFT)
+  displayOrder Int               @default(0) @map("display_order")
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  movies       CollectionMovie[]
+
+  @@index([state, displayOrder], map: "collections_state_display_order_idx")
+  @@map("collections")
+}
+
+model CollectionMovie {
+  collectionId String     @map("collection_id") @db.Uuid
+  movieId      String     @map("movie_id") @db.Uuid
+  position     Int
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  movie        Movie      @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, movieId])
+  @@unique([collectionId, position], map: "collection_movies_collection_id_position_key")
+  @@index([movieId], map: "collection_movies_movie_id_idx")
+  @@map("collection_movies")
+}
+
+model MetadataSource {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  movieId        String           @map("movie_id") @db.Uuid
+  provider       MetadataProvider
+  externalId     String           @map("external_id") @db.VarChar(120)
+  lastImportedAt DateTime         @map("last_imported_at") @db.Timestamptz(3)
+  movie          Movie            @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, provider], map: "metadata_sources_movie_id_provider_key")
+  @@unique([provider, externalId], map: "metadata_sources_provider_external_id_key")
+  @@index([movieId], map: "metadata_sources_movie_id_idx")
+  @@map("metadata_sources")
+}

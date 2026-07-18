@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { parsePageNumber } from "@/shared/pagination/page";
+
 import type { CatalogFilters, CatalogSort } from "./catalog-query-port";
 
 export type CatalogSearchParams = Readonly<Record<string, string | string[] | undefined>>;
@@ -31,6 +33,7 @@ export function parseCatalogFilters(params: CatalogSearchParams): CatalogFilters
 
   return {
     genre: optionalValue(first(params.tur), genreSchema),
+    page: parsePageNumber(params.sayfa),
     sort: parsedSort.success ? parsedSort.data : "editor-secimi",
     year: optionalValue(first(params.yil), yearSchema),
   };
@@ -38,9 +41,20 @@ export function parseCatalogFilters(params: CatalogSearchParams): CatalogFilters
 
 export function createCatalogHref(
   filters: CatalogFilters,
-  change: Partial<{ genre: string | null; sort: CatalogSort; year: number | null }>,
+  change: Partial<{
+    genre: string | null;
+    page: number;
+    sort: CatalogSort;
+    year: number | null;
+  }>,
 ): string {
-  const next = { ...filters, ...change };
+  const filterChanged =
+    change.genre !== undefined || change.sort !== undefined || change.year !== undefined;
+  const next = {
+    ...filters,
+    ...change,
+    page: change.page ?? (filterChanged ? 1 : filters.page),
+  };
   const params = new URLSearchParams();
 
   if (next.genre !== null) {
@@ -51,6 +65,9 @@ export function createCatalogHref(
   }
   if (next.sort !== "editor-secimi") {
     params.set("siralama", next.sort);
+  }
+  if (next.page > 1) {
+    params.set("sayfa", String(next.page));
   }
 
   const query = params.toString();

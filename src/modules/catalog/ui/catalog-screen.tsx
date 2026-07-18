@@ -6,6 +6,7 @@ import { createCatalogHref } from "../application/catalog-filters";
 import type { CatalogFilters, CatalogPageView } from "../application/catalog-query-port";
 import { CatalogFilterControls } from "./catalog-filter-controls";
 import { MoviePosterItem } from "./movie-poster-item";
+import { PaginationNav } from "./pagination-nav";
 
 export function CatalogScreen({
   filters,
@@ -70,6 +71,10 @@ export function CatalogScreen({
             ))}
           </div>
         )}
+        <PaginationNav
+          hrefForPage={(page) => createCatalogHref(filters, { page })}
+          pageInfo={view.pageInfo}
+        />
       </div>
     </main>
   );

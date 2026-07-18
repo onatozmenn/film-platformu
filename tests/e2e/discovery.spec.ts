@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 async function expectAccessiblePage(page: Page): Promise<void> {
+  await expect(page).toHaveTitle(/\S/u);
   const accessibility = await new AxeBuilder({ page }).analyze();
   const blockingViolations = accessibility.violations.filter(
     (violation) => violation.impact === "critical" || violation.impact === "serious",
@@ -239,4 +240,20 @@ test("offline state preserves the current catalog page", async ({ context, page 
   await expect(page.locator(".catalog-grid .poster-item")).toHaveCount(10);
 
   await context.setOffline(false);
+});
+
+test("draft, scheduled, future, and unpublished records stay out of sitemap and detail", async ({
+  page,
+  request,
+}) => {
+  const sitemap = await request.get("/sitemap.xml");
+  const body = await sitemap.text();
+
+  expect(sitemap.status()).toBe(200);
+  expect(body).toContain("/film/kiyidaki-sessizlik");
+  expect(body).not.toMatch(/kurgu-masasinda|gelecek-program|erken-yayin|programdan-kaldirilan/u);
+
+  const hiddenResponse = await page.goto("/film/kurgu-masasinda");
+  expect(hiddenResponse?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "Bu sayfa programda yok" })).toBeVisible();
 });

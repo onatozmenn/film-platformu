@@ -29,3 +29,11 @@ export function parseSuggestionLimit(value: string | null): number | null {
   const parsed = limitSchema.safeParse(value ?? undefined);
   return parsed.success ? parsed.data : null;
 }
+
+export function createSearchHref(query: string, page: number): string {
+  const params = new URLSearchParams({ q: query });
+  if (page > 1) {
+    params.set("sayfa", String(page));
+  }
+  return `/arama?${params.toString()}`;
+}

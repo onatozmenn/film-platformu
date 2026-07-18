@@ -34,7 +34,7 @@ describe("database foundation", () => {
     expect(result).toEqual([{ value: 1 }]);
   });
 
-  it("contains no speculative feature tables", async () => {
+  it("contains exactly the WP-02 catalog tables", async () => {
     const tables = await client.$queryRaw<Array<{ tableName: string }>>`
       SELECT table_name AS "tableName"
       FROM information_schema.tables
@@ -43,6 +43,15 @@ describe("database foundation", () => {
       ORDER BY table_name
     `;
 
-    expect(tables).toEqual([]);
+    expect(tables.map(({ tableName }) => tableName)).toEqual([
+      "collection_movies",
+      "collections",
+      "credits",
+      "genres",
+      "metadata_sources",
+      "movie_genres",
+      "movies",
+      "people",
+    ]);
   });
 });

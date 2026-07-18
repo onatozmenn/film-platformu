@@ -1,3 +1,5 @@
+import type { PageInfo } from "@/shared/pagination/page";
+
 export type CatalogImage = Readonly<{
   alt: string;
   focalPosition: string;
@@ -46,6 +48,7 @@ export type CatalogSort = "editor-secimi" | "populer" | "puan" | "yeni";
 
 export type CatalogFilters = Readonly<{
   genre: string | null;
+  page: number;
   sort: CatalogSort;
   year: number | null;
 }>;
@@ -59,6 +62,7 @@ export type CatalogPageView = Readonly<{
   availableGenres: readonly CatalogFilterOption[];
   availableYears: readonly number[];
   movies: readonly MovieCardView[];
+  pageInfo: PageInfo;
   total: number;
 }>;
 
@@ -87,6 +91,7 @@ export type SearchSuggestion = Readonly<{
 
 export type SearchPageView = Readonly<{
   movies: readonly MovieCardView[];
+  pageInfo: PageInfo;
   total: number;
 }>;
 
@@ -94,6 +99,6 @@ export interface CatalogQueryPort {
   getHomePage(): Promise<HomePageView>;
   getMovieBySlug(slug: string): Promise<MovieDetailView | null>;
   listMovies(filters: CatalogFilters): Promise<CatalogPageView>;
-  searchMovies(query: string): Promise<SearchPageView>;
+  searchMovies(query: string, page: number): Promise<SearchPageView>;
   suggestMovies(query: string, limit: number): Promise<readonly SearchSuggestion[]>;
 }

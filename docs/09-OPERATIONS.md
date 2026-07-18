@@ -40,6 +40,8 @@ Maintain the exact variable names and requirement matrix in `.env.example` and t
 | `TEST_DATABASE_URL` | Test process | Optional local override; integration migration refuses database names without the `_test` suffix. |
 | `LOG_LEVEL` | Server | Optional owned level: `debug`, `info`, `warn`, or `error`; defaults to `info`. |
 | `TRUST_INCOMING_REQUEST_ID` | Server | Defaults to `false`; enable only behind infrastructure that overwrites and validates `X-Request-Id`. |
+| `TMDB_ENABLED` | Server | Defaults to `false`; token presence alone never enables metadata requests. |
+| `TMDB_API_TOKEN` | Server | Required only when `TMDB_ENABLED=true`; never exposed to browser bundles or logs. |
 
 Provider-specific variables are added to this matrix by their owning work package. Presence alone never enables an integration.
 

@@ -24,8 +24,8 @@ export function createCatalogQueries(port: CatalogQueryPort) {
     listMovies(filters: CatalogFilters): Promise<CatalogPageView> {
       return port.listMovies(filters);
     },
-    searchMovies(query: string): Promise<SearchPageView> {
-      return port.searchMovies(query);
+    searchMovies(query: string, page: number): Promise<SearchPageView> {
+      return port.searchMovies(query, page);
     },
     suggestMovies(query: string, limit: number): Promise<readonly SearchSuggestion[]> {
       return port.suggestMovies(query, limit);

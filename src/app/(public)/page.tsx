@@ -1,4 +1,5 @@
-import { catalogQueries, HomeScreen } from "@/modules/catalog";
+import { HomeScreen } from "@/modules/catalog";
+import { catalogQueries } from "@/modules/catalog/server";
 
 export default async function Home() {
   const view = await catalogQueries.getHomePage();
