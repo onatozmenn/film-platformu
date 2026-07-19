@@ -1,7 +1,7 @@
 # Delivery Plan
 
 Status: **Execution source of truth**  
-Active work package: **WP-04 Preroll Advertising And Consent**
+Active work package: **WP-05 Optional Identity And Member Library**
 
 ## Execution Rules
 
@@ -194,7 +194,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 - Local validation on 2026-07-19: formatting, zero-warning lint, strict typecheck, and production build passed; 171 unit/component/route/provider tests passed; aggregate coverage passed at 85.24% statements, 77.94% branches, 85.9% functions, and 85.72% lines; file-scoped 100% gates passed for preroll policy and watchability; 16 PostgreSQL tests and `db:check` passed; non-watch routes remained at 160.3 KB gzip JavaScript and 8.0 KB gzip CSS.
 - Security/content impact: client-body consent remains rejected; arbitrary/mismatched tag URLs fail closed before optional code loads; no title, movie ID, user data, history, provider URL, production tag, cookie, or local/session storage value enters ad telemetry. Report-only CSP adds explicit IMA/Google Ads origins without wildcard sources, and non-watch bundle checks contain no Mux, IMA, or ad-tag identifiers.
 - External decision: [ADR 0004](adr/0004-production-consent-selection-gate.md) is intentionally `Proposed`; it records candidate approaches and the enforced production-disabled gate, not a CMP selection or legal approval. The owner/legal reviewer has not supplied launch-territory consent policy, CMP representation, production Google Ad Manager tag, or `ads.txt` values, so the first scope item and production advertising remain blocked without fabricated evidence.
-- Remote validation: pending the WP-04 implementation commit CI run. Do not activate WP-07 from this package until that run passes and the external ADR decision is accepted; independently unblocked WP-05 may proceed afterward.
+- Remote validation: GitHub Actions [CI run 29666009878](https://github.com/onatozmenn/film-platformu/actions/runs/29666009878) passed on Node 24 and PostgreSQL 18.3 for commit `6388bbf`, including frozen install, migrations, formatting, lint, typecheck, 171 unit/component/route/provider tests, 16 PostgreSQL tests, database state, production build, public-route budgets, and the 54-pass four-viewport browser suite. The external ADR/legal decision remains open and still blocks production advertising and WP-07 completion; independently unblocked WP-05 is active.
 
 ## WP-05 Optional Identity And Member Library
 
@@ -219,7 +219,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Blocked by WP-02.
+Active after validated WP-02 catalog persistence and the remotely validated WP-04 implementation. A production email provider/domain remains an owner input for WP-07; WP-05 proceeds with Auth.js database sessions and a deterministic non-production email-link adapter.
 
 ## WP-06 Admin Publication And Audit
 
