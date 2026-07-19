@@ -1,7 +1,7 @@
 # Delivery Plan
 
 Status: **Execution source of truth**  
-Active work package: **WP-05 Optional Identity And Member Library**
+Active work package: **WP-06 Admin Publication And Audit**
 
 ## Execution Rules
 
@@ -228,7 +228,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 - Local validation on 2026-07-19: frozen install and formatting passed; zero-warning lint, strict typecheck, production build, and four-route gzip budgets passed; 278 unit/component/route/provider tests passed across 71 files; aggregate coverage passed at 86.71% statements, 80.55% branches, 87.46% functions, and 87.1% lines; file-scoped 100% gates passed for rating, progress, preroll, and watchability policies. Non-watch routes remain at 172.8 KB gzip JavaScript, detail at 174.5 KB, and CSS at 9.0 KB, below the 180/60 KB limits with no Mux, email, Auth.js secret, cron secret, or provider credential in client bundles.
 - Security/privacy impact: member bodies never accept a user ID/role; same-origin and active-session checks precede mutation; account/library queries retain composite ownership predicates; auth/library outages fail open only to anonymous guest behavior and never relax playback rights; tokens are absent from logs and persistent storage; public caches never contain member state; progress telemetry is not sent to advertising; internal failures map to safe Turkish Problem Details with request IDs and coarse aggregate logs.
 - External provider evidence: a production sender domain and SMTP credential were not supplied, so no live email was sent. The production fake is rejected and production identity remains disabled until `AUTH_EMAIL_PROVIDER=smtp` plus the complete owner-managed configuration is provided in WP-07. This does not block the deterministic WP-05 implementation or its local/CI contracts.
-- Remote validation: pending the WP-05 implementation commit and exact-SHA GitHub Actions run; WP-06 is not active until that evidence passes.
+- Remote validation: GitHub Actions [CI run 29669839500](https://github.com/onatozmenn/film-platformu/actions/runs/29669839500) passed on Node 24 and PostgreSQL 18.3 for exact commit `0be8c41df68af495a964dcbe331d4bea155384f1`, which contains the WP-05 implementation commit `9db9be9aefb49e8f1dedf32528a7b2528c6fd744` plus reviewed member-detail visual baselines. Frozen install, migrations, formatting, lint, typecheck, 278 unit/component/route/provider tests, 29 PostgreSQL tests, database state, production build, public-route budgets, and the 58-pass four-viewport browser suite all passed. WP-05 is complete and WP-06 is active.
 
 ## WP-06 Admin Publication And Audit
 
@@ -254,7 +254,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Blocked by WP-03.
+Activated after the accepted WP-03 and WP-05 exact-SHA evidence passed. Implementation evidence is pending.
 
 ## WP-07 Production Hardening And Launch
 
