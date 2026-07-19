@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -52,6 +53,21 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Scan tracked files for secrets
+        run: pnpm check:secrets
+
+      - name: Audit dependencies
+        run: pnpm check:dependencies
+
+      - name: Install Go for workflow validation
+        uses: actions/setup-go@v6
+        with:
+          cache: false
+          go-version: 1.26.5
+
+      - name: Validate GitHub workflows
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/*.yml
 
       - name: Apply database migrations
         run: pnpm db:migrate

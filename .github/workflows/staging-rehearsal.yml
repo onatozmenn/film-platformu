@@ -1,0 +1,63 @@
+name: Staging rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_sha:
+        description: Exact deployed application commit
+        required: true
+        type: string
+
+concurrency:
+  group: staging-rehearsal
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Read-only staging smoke
+    environment: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STAGING_EXPECTED_RELEASE_ID: ${{ github.sha }}
+      STAGING_ORIGIN: ${{ vars.STAGING_ORIGIN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Confirm immutable deployed SHA
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+        run: test "$CONFIRM_SHA" = "$GITHUB_SHA"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run read-only staging rehearsal
+        run: pnpm test:staging
+
+      - name: Upload staging failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: staging-failure-evidence
+          path: |
+            playwright-report-staging
+            test-results-staging
+          retention-days: 7

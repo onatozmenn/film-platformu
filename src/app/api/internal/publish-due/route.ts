@@ -7,7 +7,7 @@ import { problemResponse } from "@/shared/http/problem-details";
 import { createRequestId, requestIdHeader } from "@/shared/http/request-id";
 import { logger } from "@/shared/observability/logger";
 
-export async function POST(request: NextRequest): Promise<Response> {
+async function run(request: NextRequest): Promise<Response> {
   const requestId = request.headers.get(requestIdHeader) ?? createRequestId();
   const environment = getInternalJobsEnvironment();
   if (environment.kind === "disabled") {
@@ -51,3 +51,6 @@ export async function POST(request: NextRequest): Promise<Response> {
     return problemResponse("INTERNAL_ERROR", requestId);
   }
 }
+
+export const GET = run;
+export const POST = run;

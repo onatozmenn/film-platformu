@@ -1,4 +1,8 @@
 import { PublicShell } from "@/modules/catalog";
+import {
+  approvedFooterLinks,
+  approvedPublicContent,
+} from "@/modules/compliance/approved-public-content";
 import { getOptionalMemberSession } from "@/modules/identity/server";
 import { parsePublicEnvironment } from "@/shared/config/public-environment";
 
@@ -12,6 +16,8 @@ export default async function PublicLayout({ children }: Readonly<{ children: Re
     <PublicShell
       accountHref={session === null ? "/giris" : "/hesap"}
       accountLabel={session === null ? "Oturum aç" : session.user.displayName}
+      brandLogo={approvedPublicContent.brand?.logo ?? null}
+      footerLinks={approvedFooterLinks(approvedPublicContent)}
       siteName={siteName}
     >
       {children}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/internal/publish-due",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/internal/run-retention",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

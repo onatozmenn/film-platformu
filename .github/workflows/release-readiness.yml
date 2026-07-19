@@ -1,0 +1,111 @@
+name: Release readiness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Reuse full quality gates
+    uses: ./.github/workflows/ci.yml
+
+  security-artifacts:
+    name: Security evidence and SBOM
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Scan tracked files for secrets
+        run: pnpm check:secrets
+
+      - name: Audit dependencies
+        run: pnpm check:dependencies
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+        with:
+          artifact-name: film-platform-${{ github.sha }}.cdx.json
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+          path: .
+          syft-version: v1.48.0
+          upload-artifact: true
+          upload-artifact-retention: 30
+          upload-release-assets: false
+
+  production-configuration:
+    name: Production configuration and owner evidence
+    environment: production
+    needs: [quality, security-artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ADVERTISING_PROVIDER: ${{ vars.ADVERTISING_PROVIDER }}
+      AUTH_EMAIL_FROM: ${{ vars.AUTH_EMAIL_FROM }}
+      AUTH_EMAIL_PROVIDER: ${{ vars.AUTH_EMAIL_PROVIDER }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      AUTH_SMTP_URL: ${{ secrets.AUTH_SMTP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
+      LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+      MUX_SIGNING_KEY_ID: ${{ secrets.MUX_SIGNING_KEY_ID }}
+      MUX_SIGNING_PRIVATE_KEY: ${{ secrets.MUX_SIGNING_PRIVATE_KEY }}
+      MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID }}
+      MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET }}
+      MUX_WEBHOOK_SECRET: ${{ secrets.MUX_WEBHOOK_SECRET }}
+      NEXT_PUBLIC_SITE_NAME: ${{ vars.NEXT_PUBLIC_SITE_NAME }}
+      NEXTAUTH_URL: ${{ vars.SITE_ORIGIN }}
+      NODE_ENV: production
+      PRODUCTION_CSP_ENFORCED: ${{ vars.PRODUCTION_CSP_ENFORCED }}
+      PRODUCTION_HSTS_ENABLED: ${{ vars.PRODUCTION_HSTS_ENABLED }}
+      PRODUCTION_RELEASE_EVIDENCE_JSON: ${{ vars.PRODUCTION_RELEASE_EVIDENCE_JSON }}
+      PUBLISH_BATCH_LIMIT: ${{ vars.PUBLISH_BATCH_LIMIT }}
+      RELEASE_ID: ${{ github.sha }}
+      RETENTION_BATCH_LIMIT: ${{ vars.RETENTION_BATCH_LIMIT }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      SUPPORTED_TERRITORIES: ${{ vars.SUPPORTED_TERRITORIES }}
+      TMDB_API_TOKEN: ${{ secrets.TMDB_API_TOKEN }}
+      TMDB_ENABLED: ${{ vars.TMDB_ENABLED }}
+      TRUST_INCOMING_REQUEST_ID: ${{ vars.TRUST_INCOMING_REQUEST_ID }}
+      VIDEO_PROVIDER: mux
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check runtime database privileges
+        run: pnpm check:runtime-db
+
+      - name: Check production catalog rights
+        run: pnpm check:rights
+
+      - name: Check production readiness
+        run: pnpm check:production-readiness

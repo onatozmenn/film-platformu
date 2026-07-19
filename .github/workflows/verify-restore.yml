@@ -1,0 +1,52 @@
+name: Verify restored database
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_sha:
+        description: Exact application commit used for restore verification
+        required: true
+        type: string
+
+concurrency:
+  group: restore-verification
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Check isolated restore invariants
+    environment: restore-verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.RESTORE_DATABASE_URL }}
+      RESTORE_DATABASE_URL: ${{ secrets.RESTORE_DATABASE_URL }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Confirm immutable application SHA
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+        run: test "$CONFIRM_SHA" = "$GITHUB_SHA"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply current migrations to isolated restore
+        run: pnpm db:migrate
+
+      - name: Verify aggregate restore invariants
+        run: pnpm check:restore

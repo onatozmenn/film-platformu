@@ -54,9 +54,14 @@ Maintain the exact variable names and requirement matrix in `.env.example` and t
 | `AUTH_SECRET` | Server secret | Required when email authentication is enabled; at least 32 characters and never exposed or logged. |
 | `AUTH_EMAIL_FROM`, `AUTH_SMTP_URL` | Server | Sender is required for enabled identity; SMTP URL is required only for `smtp` and must use `smtp:` or `smtps:`. |
 | `NEXTAUTH_URL` | Server | Canonical Auth.js callback origin; set to the same trusted origin as `SITE_ORIGIN` for each deployment. |
+| `RELEASE_ID` | Server | Immutable 7-64 character release identifier included in every structured log; the release workflow supplies the exact Git SHA. |
+| `PRODUCTION_CSP_ENFORCED` | Server | Defaults to `false`; may become `true` only in production after a staging CSP review and public HTTPS origin verification. |
+| `PRODUCTION_HSTS_ENABLED` | Server | Defaults to `false`; may become `true` only after the production domain and HTTPS behavior are verified. |
 | `CRON_SECRET` | Server secret | Dedicated 32+ character bearer credential for internal scheduled commands. Absence disables the transport. |
 | `PUBLISH_BATCH_LIMIT` | Server | Integer `1..100`, defaults to `25`, and bounds one scheduled-publication invocation. |
 | `RETENTION_BATCH_LIMIT` | Server | Integer `1..500`, defaults to `100`, and bounds one retention invocation. |
+| `PRODUCTION_RELEASE_EVIDENCE_FILE`, `PRODUCTION_RELEASE_EVIDENCE_JSON` | Release tooling | Mutually exclusive reference-only evidence inputs; never contain legal copy, rights documents, credentials, or personal data. |
+| `RESTORE_DATABASE_URL` | Restore workflow secret | Isolated PostgreSQL target whose database name must end in `_restore`; never points to production. |
 
 Provider-specific variables are added to this matrix by their owning work package. Presence alone never enables an integration.
 
@@ -89,8 +94,13 @@ Optional Mux webhook development uses the provider's official forwarding mechani
 - Run schema migrations as an explicit pre-release job with a migration-capable database identity.
 - Run the application with a least-privilege runtime identity that cannot alter schema.
 - Invoke `/api/internal/publish-due` every minute and `/api/internal/run-retention` daily through Vercel Cron using the dedicated bearer secret. Jobs remain inside the deployed monolith and tolerate overlap.
+- [`vercel.json`](../vercel.json) declares publication every minute and retention daily at `03:00 UTC`. Vercel invokes each route with `GET` and automatically supplies `Authorization: Bearer <CRON_SECRET>`; controlled operator tooling may use `POST` with the same contract. Every-minute scheduling requires a Vercel plan that supports that cadence and remains an owner deployment input.
 
 An alternative host, database, or video provider requires an ADR and a staging rehearsal of caching, IP/territory trust, webhook delivery, connection behavior, and rollback.
+
+The protected manual workflows under [`.github/workflows`](../.github/workflows) separate release readiness, migration authority, and restore verification. Production readiness generates a CycloneDX JSON SBOM using immutable `anchore/sbom-action` commit `e22c389904149dbc22b58101806040fa8d37a610` with Syft `v1.48.0`. [`docs/10-RELEASE-EVIDENCE.md`](10-RELEASE-EVIDENCE.md) defines the evidence manifest and external blockers.
+
+`Staging rehearsal` requires an exact deployed SHA and a public HTTPS `STAGING_ORIGIN`. The remote `X-Release-Id` response header must match that SHA. Its mobile/desktop suite is read-only: health, crawler policy, home, catalog, one public detail/watch path, CSP, axe, and private/internal denial. It accepts no protection-bypass secret, test harness, fixture reset, production credential, or mutation.
 
 ## Release Procedure
 
@@ -105,6 +115,8 @@ An alternative host, database, or video provider requires an ADR and a staging r
 9. Run read-only production smoke checks for home, search, detail, playback grant, auth callback, health, and admin authorization.
 10. Observe error, latency, playback-denial, webhook, scheduled-job, retention, and ad-failure signals through the defined window.
 
+`Release readiness` must pass first for the exact SHA. `Verify restored database` then proves the isolated restore aggregate state. `Deploy database migrations` requires a typed exact-SHA confirmation and a separately scoped migration credential. A workflow definition does not prove protected environments, backups, alerts, or owner approval exist.
+
 Do not seed production with fictional development accounts or content.
 
 ## Rollback And Forward Fix
@@ -115,6 +127,7 @@ Do not seed production with fictional development accounts or content.
 - Provider feature flags can disable ads, metadata import, member writes, or new asset ingestion independently. Rights checks and signed playback are never bypassed by a kill switch.
 - An advertising incident disables the ad opportunity and keeps eligible content available.
 - A playback-security or rights incident disables new playback grants for affected content or globally until verified.
+- Vercel Instant Rollback does not update active cron definitions. A rollback rehearsal must verify or explicitly disable/update cron schedules separately.
 
 ## Observability
 
@@ -225,6 +238,7 @@ Each alert links to a runbook and names an owner before production launch.
 - Define RPO/RTO with the owner before launch; initial engineering target is RPO <= 24 hours and RTO <= 4 hours.
 - Perform a restore into an isolated non-production environment before launch and on a recurring schedule.
 - Verify migrations, catalog counts, rights invariants, member-data protections, and pending deletion replay after restore.
+- `pnpm check:restore` refuses databases not ending in `_restore` and reports only aggregate counts. A due deletion marker fails the check until the bounded retention command is exercised against that isolated restore and the check is rerun.
 - Provider-hosted media recovery and retention follow the Mux account policy and content-owner agreements; database backup alone is not a media backup.
 
 ## Operational Launch Blockers

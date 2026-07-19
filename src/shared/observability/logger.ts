@@ -2,9 +2,7 @@ import "server-only";
 
 import { getServerEnvironment } from "@/shared/config/server-environment";
 
-import { redactLogContext } from "./redaction";
-
-type LogLevel = "debug" | "error" | "info" | "warn";
+import { createLogEntry, type LogLevel } from "./log-entry";
 
 const priorities: Record<LogLevel, number> = {
   debug: 10,
@@ -14,18 +12,22 @@ const priorities: Record<LogLevel, number> = {
 };
 
 function write(level: LogLevel, event: string, context: Readonly<Record<string, unknown>>): void {
-  const configuredLevel = getServerEnvironment().logLevel;
+  const environment = getServerEnvironment();
+  const configuredLevel = environment.logLevel;
 
   if (priorities[level] < priorities[configuredLevel]) {
     return;
   }
 
-  const entry = JSON.stringify({
-    timestamp: new Date().toISOString(),
-    level,
-    event,
-    ...redactLogContext(context),
-  });
+  const entry = JSON.stringify(
+    createLogEntry({
+      context,
+      event,
+      level,
+      releaseId: environment.releaseId,
+      timestamp: new Date(),
+    }),
+  );
 
   const stream = level === "error" ? process.stderr : process.stdout;
   stream.write(`${entry}\n`);

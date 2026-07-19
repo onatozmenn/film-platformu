@@ -23,6 +23,7 @@ test("renders the responsive Turkish foundation shell without leaks", async ({ p
   expect(response).not.toBeNull();
   expect(response?.headers()["x-request-id"]).toMatch(/^req_[a-f0-9]{32}$/u);
   expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(response?.headers()["x-release-id"]).toBe("local-development");
   await expect(page.locator("html")).toHaveAttribute("lang", "tr");
   await expect(page.getByRole("heading", { level: 1, name: "Kıyıdaki Sessizlik" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Ana içeriğe geç" })).toBeAttached();
@@ -84,6 +85,30 @@ test("health endpoints expose only coarse state", async ({ request }) => {
   expect(ready.headers()["cache-control"]).toBe("no-store");
   expect(live.headers()["x-request-id"]).toMatch(/^req_[a-f0-9]{32}$/u);
   expect(ready.headers()["x-request-id"]).toMatch(/^req_[a-f0-9]{32}$/u);
+  expect(live.headers()["x-release-id"]).toBe("local-development");
+  expect(ready.headers()["x-release-id"]).toBe("local-development");
+});
+
+test("unapproved public compliance content stays unpublished", async ({ page, request }) => {
+  await page.goto("/");
+  for (const label of [
+    "Gizlilik",
+    "Kullanım koşulları",
+    "Çerez ve rıza",
+    "Destek",
+    "Veri kaynakları",
+  ]) {
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: label })).toHaveCount(0);
+  }
+  for (const path of [
+    "/yasal/gizlilik",
+    "/yasal/kullanim-kosullari",
+    "/yasal/cerez-ve-riza",
+    "/destek",
+    "/hakkinda/veri-kaynaklari",
+  ]) {
+    expect((await request.get(path)).status()).toBe(404);
+  }
 });
 
 test("unknown routes render the safe Turkish not-found state", async ({ page }) => {

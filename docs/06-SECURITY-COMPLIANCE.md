@@ -136,6 +136,8 @@ Configure and test at least:
 
 Start CSP changes in report-only mode with automated route coverage, then enforce them. Each third-party exception must name the provider feature that requires it. Do not add wildcard sources merely to silence violations.
 
+`PRODUCTION_CSP_ENFORCED=true` and `PRODUCTION_HSTS_ENABLED=true` are rejected outside production or without a public HTTPS `SITE_ORIGIN`. Production readiness separately requires staging CSP-review and domain/TLS evidence references; enabling a flag alone is not approval.
+
 ## CSRF, Abuse, And Rate Limits
 
 - Same-origin browser mutations validate Origin/Host and use same-site cookies.
@@ -186,6 +188,8 @@ Start CSP changes in report-only mode with automated route coverage, then enforc
 - Generate an SBOM for production builds when deployment automation is introduced.
 - Migrations run as a separately authorized release step; the web runtime should not own schema-changing privileges.
 - Preview deployments never connect to the production database or production provider projects.
+
+CI scans only Git-tracked text files with high-signal credential rules and emits path plus rule ID, never the matched value. Dependency audit blocks high/critical advisories. The manual release workflow emits a pinned CycloneDX SBOM. `pnpm check:runtime-db` rejects a runtime identity that is a superuser, owns application tables, or can create schema objects; only the protected migration workflow receives migration authority.
 
 ## Required Security Tests
 

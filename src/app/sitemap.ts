@@ -1,6 +1,10 @@
 import type { MetadataRoute } from "next";
 
 import { catalogQueries } from "@/modules/catalog/server";
+import {
+  approvedFooterLinks,
+  approvedPublicContent,
+} from "@/modules/compliance/approved-public-content";
 import { getServerEnvironment } from "@/shared/config/server-environment";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -22,6 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { changeFrequency: "daily", priority: 1, url: `${siteOrigin}/` },
     { changeFrequency: "daily", priority: 0.9, url: `${siteOrigin}/filmler` },
+    ...approvedFooterLinks(approvedPublicContent).map((link) => ({
+      changeFrequency: "yearly" as const,
+      priority: 0.2,
+      url: `${siteOrigin}${link.href}`,
+    })),
     ...movies.map((movie) => ({
       changeFrequency: "weekly" as const,
       priority: 0.8,

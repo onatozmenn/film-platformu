@@ -212,7 +212,7 @@ Neither endpoint returns versions, environment values, connection details, or pr
 
 ## Internal Scheduled Commands
 
-`POST /api/internal/publish-due`
+`GET /api/internal/publish-due` (Vercel Cron) or `POST /api/internal/publish-due` (controlled operator invocation)
 
 - Accept only `Authorization: Bearer <CRON_SECRET>` over the production deployment; compare the credential in constant time and never log it.
 - Reject browser cookies, CORS, and request-supplied dates. Use the injected server clock.
@@ -220,7 +220,7 @@ Neither endpoint returns versions, environment values, connection details, or pr
 - Return only aggregate counts (`examined`, `published`, `skipped`, `failed`) with no film metadata or internal failure details.
 - Apply a strict execution limit and leave unprocessed rows for the next invocation.
 
-`POST /api/internal/run-retention`
+`GET /api/internal/run-retention` (Vercel Cron) or `POST /api/internal/run-retention` (controlled operator invocation)
 
 - Use the same `CRON_SECRET`, no-cookie/no-CORS, server-clock, aggregate-response, and bounded-execution rules.
 - Invoke `PurgeDeletedAccounts` for irreversible deletion requests whose `deletedAt` is at least 30 days old.

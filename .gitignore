@@ -13,7 +13,9 @@
 # testing
 /coverage
 /playwright-report
+/playwright-report-staging
 /test-results
+/test-results-staging
 
 # next.js
 /.next/
@@ -21,6 +23,7 @@
 
 # production
 /build
+/config/production-release-evidence.json
 
 # misc
 .DS_Store

@@ -15,6 +15,7 @@ export function getServerEnvironment(): ServerEnvironment {
     MUX_TOKEN_SECRET: process.env.MUX_TOKEN_SECRET,
     MUX_WEBHOOK_SECRET: process.env.MUX_WEBHOOK_SECRET,
     NODE_ENV: process.env.NODE_ENV,
+    RELEASE_ID: process.env.RELEASE_ID,
     SITE_ORIGIN: process.env.SITE_ORIGIN,
     SUPPORTED_TERRITORIES: process.env.SUPPORTED_TERRITORIES,
     TMDB_API_TOKEN: process.env.TMDB_API_TOKEN,

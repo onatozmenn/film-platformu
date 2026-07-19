@@ -21,12 +21,13 @@ vi.mock("@/shared/config/internal-jobs-server", () => ({
 }));
 vi.mock("@/shared/observability/logger", () => ({ logger: { error, info, warn } }));
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 function request(
   authorization: string | null = `Bearer ${"c".repeat(32)}`,
   headers: Record<string, string> = {},
   url: string = "https://film.example/api/internal/run-retention",
+  method: "GET" | "POST" = "POST",
 ) {
   return new NextRequest(url, {
     headers: {
@@ -34,7 +35,7 @@ function request(
       "x-request-id": "req_retention",
       ...headers,
     },
-    method: "POST",
+    method,
   });
 }
 
@@ -47,24 +48,30 @@ beforeEach(() => {
 });
 
 describe("POST /api/internal/run-retention", () => {
-  it("runs one bounded aggregate-only retention batch", async () => {
-    const response = await POST(request());
+  it.each([
+    ["Vercel Cron GET", GET, "GET"],
+    ["operator POST", POST, "POST"],
+  ] as const)(
+    "runs one bounded aggregate-only retention batch over %s",
+    async (_label, handler, method) => {
+      const response = await handler(request(undefined, {}, undefined, method));
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(response.headers.get("access-control-allow-origin")).toBeNull();
-    expect(purgeDueAccounts).toHaveBeenCalledWith(25);
-    await expect(response.json()).resolves.toEqual({
-      examined: 2,
-      failed: 0,
-      purged: 1,
-      skipped: 1,
-    });
-    expect(info).toHaveBeenCalledWith(
-      "retention.completed",
-      expect.objectContaining({ examined: 2, purged: 1, requestId: "req_retention" }),
-    );
-  });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get("access-control-allow-origin")).toBeNull();
+      expect(purgeDueAccounts).toHaveBeenCalledWith(25);
+      await expect(response.json()).resolves.toEqual({
+        examined: 2,
+        failed: 0,
+        purged: 1,
+        skipped: 1,
+      });
+      expect(info).toHaveBeenCalledWith(
+        "retention.completed",
+        expect.objectContaining({ examined: 2, purged: 1, requestId: "req_retention" }),
+      );
+    },
+  );
 
   it.each([
     ["missing credential", null, {}, "https://film.example/api/internal/run-retention", 401],

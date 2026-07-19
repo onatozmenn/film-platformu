@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Source_Serif_4 } from "next/font/google";
 
 import { parsePublicEnvironment } from "@/shared/config/public-environment";
+import { approvedPublicContent } from "@/modules/compliance/approved-public-content";
 
 import "./globals.css";
 
@@ -30,7 +31,9 @@ export const metadata: Metadata = {
     default: publicEnvironment.siteName,
     template: `%s | ${publicEnvironment.siteName}`,
   },
-  description: "Lisanslı filmler için Türkçe seçki ve izleme platformu.",
+  description:
+    approvedPublicContent.brand?.description ??
+    "Lisanslı filmler için Türkçe seçki ve izleme platformu.",
 };
 
 export default function RootLayout({

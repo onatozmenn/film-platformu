@@ -58,6 +58,7 @@ Available discovery routes:
 - `/giris` starts the account-enumeration-safe email-link flow when an identity provider is configured.
 - `/hesap` shows the signed-in member's watchlist, continue-watching history, session controls, and irreversible account-deletion command.
 - `/yonetim` provides the private editor/admin publication queue, optimistic editorial forms, collections, provider asset reconciliation, subtitle metadata, rights, preview, role management, and redacted audit views.
+- `/yasal/**`, `/destek`, and `/hakkinda/veri-kaynaklari` are strict approved-content routes. They remain `404` and absent from navigation until reviewed brand/legal/support/TMDB content is committed.
 
 WP-03 exposes an `/izle` action only when fresh publication, trusted-territory rights, and active-ready asset policy passes. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md); owned playback fixture provenance is recorded in [`public/fixtures/playback/ATTRIBUTION.md`](public/fixtures/playback/ATTRIBUTION.md).
 
@@ -78,11 +79,19 @@ pnpm db:check
 pnpm build
 pnpm test:e2e
 pnpm check:budgets
+pnpm check:secrets
+pnpm check:dependencies
+pnpm check:production-readiness
+pnpm check:rights
+pnpm check:runtime-db
+pnpm check:restore
 ```
 
 `pnpm test:integration` applies checked-in migrations only to a database whose name ends in `_test`. Browser tests start the app with deterministic configuration and verify mobile/desktop visuals, accessibility, runtime font hosting, health responses, and client-bundle secret separation.
 
 `pnpm check:budgets` requires an existing production build plus Chromium and starts an isolated production server to enforce the public-route gzip targets.
+
+The production-only checks are fail-closed release tooling. They require protected environment configuration, owner evidence, a least-privilege runtime database, or an isolated `_restore` database as applicable; local/CI defaults are intentionally not production-ready. See [`docs/10-RELEASE-EVIDENCE.md`](docs/10-RELEASE-EVIDENCE.md).
 
 TMDB metadata support is disabled by default and its synthetic contract tests make no live request. When explicitly enabled, editors import by numeric TMDB ID; provider imagery is not persisted as licensed catalog art. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. Advertising defaults to disabled; browser tests opt into a deterministic fake and a Google-owned sample tag without making an ad-provider request. Identity and internal jobs also default to disabled; deterministic test adapters require no production credential. No Mux, TMDB, email, advertising, or production credential is required for local tests.
 

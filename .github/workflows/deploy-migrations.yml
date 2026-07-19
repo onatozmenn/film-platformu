@@ -1,0 +1,51 @@
+name: Deploy database migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_sha:
+        description: Exact commit SHA approved for migration
+        required: true
+        type: string
+
+concurrency:
+  group: production-migrations
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Apply forward-only production migrations
+    environment: production-migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Confirm immutable release SHA
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+        run: test "$CONFIRM_SHA" = "$GITHUB_SHA"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply reviewed forward migrations
+        run: pnpm db:migrate
+
+      - name: Verify migration state
+        run: pnpm db:check

@@ -1,0 +1,20 @@
+{
+  "advertisingApprovalReference": null,
+  "alertingReference": null,
+  "backupRestoreReference": null,
+  "brandApprovalReference": null,
+  "cspReviewReference": null,
+  "cronMonitoringReference": null,
+  "databaseIsolationReference": null,
+  "domainTlsReference": null,
+  "edgeProtectionReference": null,
+  "legalApprovalReference": null,
+  "observabilityReference": null,
+  "ownerAcceptanceReference": null,
+  "rightsCatalogReference": null,
+  "rollbackRehearsalReference": null,
+  "secretManagerReference": null,
+  "stagingRehearsalReference": null,
+  "supportContactReference": null,
+  "tmdbAttributionReference": null
+}

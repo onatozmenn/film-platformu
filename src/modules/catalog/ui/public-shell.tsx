@@ -2,6 +2,7 @@
 
 import { Menu, Search, UserRound } from "lucide-react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
@@ -17,12 +18,16 @@ type PublicLayer = "menu" | "search";
 export function PublicShell({
   accountHref = "/giris",
   accountLabel = "Oturum aç",
+  brandLogo = null,
   children,
+  footerLinks = [],
   siteName,
 }: Readonly<{
   accountHref?: string;
   accountLabel?: string;
+  brandLogo?: Readonly<{ alt: string; height: number; src: string; width: number }> | null;
   children: React.ReactNode;
+  footerLinks?: readonly Readonly<{ href: string; label: string }>[];
   siteName: string;
 }>) {
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
@@ -45,7 +50,17 @@ export function PublicShell({
       <header className="site-header">
         <div className="site-header__inner">
           <Link className="brand" href="/" aria-label={`${siteName} ana sayfa`}>
-            <span className="brand__cue" aria-hidden="true" />
+            {brandLogo === null ? (
+              <span className="brand__cue" aria-hidden="true" />
+            ) : (
+              <Image
+                alt={brandLogo.alt}
+                className="brand__logo"
+                height={brandLogo.height}
+                src={brandLogo.src}
+                width={brandLogo.width}
+              />
+            )}
             <span>{siteName}</span>
           </Link>
 
@@ -117,6 +132,11 @@ export function PublicShell({
           <nav aria-label="Alt menü">
             <Link href="/filmler">Filmler</Link>
             <Link href="/arama">Arama</Link>
+            {footerLinks.map((link) => (
+              <Link href={link.href} key={link.href}>
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
       </footer>

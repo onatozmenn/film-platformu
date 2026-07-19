@@ -25,6 +25,16 @@ const supportedTerritoriesSchema = z
   .default("TR")
   .transform((value) => [...new Set(value.split(",").map((entry) => entry.trim()))])
   .pipe(z.array(territorySchema).min(1).max(32));
+const releaseIdSchema = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z
+    .string()
+    .trim()
+    .min(7)
+    .max(64)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u)
+    .default("local-development"),
+);
 
 const serverEnvironmentSchema = z
   .object({
@@ -40,6 +50,7 @@ const serverEnvironmentSchema = z
     MUX_TOKEN_SECRET: optionalProviderSecretSchema,
     MUX_WEBHOOK_SECRET: optionalProviderSecretSchema,
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    RELEASE_ID: releaseIdSchema,
     SITE_ORIGIN: z.url().default("http://localhost:3000"),
     SUPPORTED_TERRITORIES: supportedTerritoriesSchema,
     TMDB_API_TOKEN: optionalSecretSchema,
@@ -116,6 +127,7 @@ export type ServerEnvironment = Readonly<{
     supportedTerritories: readonly string[];
     videoProvider: VideoProviderEnvironment;
   }>;
+  releaseId: string;
   siteOrigin: string;
   trustIncomingRequestId: boolean;
 }>;
@@ -130,6 +142,7 @@ export function parseServerEnvironment(source: {
   MUX_TOKEN_SECRET?: string | undefined;
   MUX_WEBHOOK_SECRET?: string | undefined;
   NODE_ENV?: string | undefined;
+  RELEASE_ID?: string | undefined;
   SITE_ORIGIN?: string | undefined;
   SUPPORTED_TERRITORIES?: string | undefined;
   TMDB_API_TOKEN?: string | undefined;
@@ -176,6 +189,7 @@ export function parseServerEnvironment(source: {
       supportedTerritories: Object.freeze(parsed.SUPPORTED_TERRITORIES),
       videoProvider: Object.freeze(videoProvider),
     }),
+    releaseId: parsed.RELEASE_ID,
     siteOrigin: parsed.SITE_ORIGIN.replace(/\/$/u, ""),
     trustIncomingRequestId: parsed.TRUST_INCOMING_REQUEST_ID === "true",
   });

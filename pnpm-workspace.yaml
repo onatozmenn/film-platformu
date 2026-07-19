@@ -4,3 +4,7 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
+
+peerDependencyRules:
+  allowedVersions:
+    "next-auth@4.24.14>nodemailer": "9.0.1"

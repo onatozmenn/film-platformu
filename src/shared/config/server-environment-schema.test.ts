@@ -9,6 +9,7 @@ describe("parseServerEnvironment", () => {
         DATABASE_URL: "postgresql://film:film@127.0.0.1:5432/film_test",
         LOG_LEVEL: "warn",
         NODE_ENV: "test",
+        RELEASE_ID: "release-abcdef1",
         SITE_ORIGIN: "https://film.example/",
         TRUST_INCOMING_REQUEST_ID: "true",
       }),
@@ -22,6 +23,7 @@ describe("parseServerEnvironment", () => {
         supportedTerritories: ["TR"],
         videoProvider: { kind: "fake" },
       },
+      releaseId: "release-abcdef1",
       siteOrigin: "https://film.example",
       trustIncomingRequestId: true,
     });
@@ -33,6 +35,14 @@ describe("parseServerEnvironment", () => {
         DATABASE_URL: "https://database.invalid/film",
       }),
     ).toThrow("DATABASE_URL must use the PostgreSQL protocol");
+  });
+
+  it("defaults a local release identifier and rejects an unsafe value", () => {
+    const database = "postgresql://film:film@127.0.0.1:5432/film_test";
+    expect(parseServerEnvironment({ DATABASE_URL: database }).releaseId).toBe("local-development");
+    expect(() =>
+      parseServerEnvironment({ DATABASE_URL: database, RELEASE_ID: "bad value" }),
+    ).toThrow();
   });
 
   it("keeps metadata disabled unless explicitly enabled with a token", () => {
