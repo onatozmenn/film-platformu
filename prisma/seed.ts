@@ -1,6 +1,11 @@
 import "dotenv/config";
 
-import { CollectionState, CreditKind, PublicationState } from "../src/generated/prisma/enums";
+import {
+  CollectionState,
+  CreditKind,
+  PublicationState,
+  UserRoleName,
+} from "../src/generated/prisma/enums";
 import type { PrismaClient } from "../src/generated/prisma/client";
 import type {
   CatalogImage,
@@ -118,6 +123,57 @@ async function resetCatalog(client: PrismaClient): Promise<void> {
     client.genre.deleteMany(),
     client.movie.deleteMany(),
   ]);
+}
+
+async function resetIdentity(client: PrismaClient): Promise<void> {
+  await client.$transaction([
+    client.accountDeletionRequest.deleteMany(),
+    client.verificationToken.deleteMany(),
+    client.user.deleteMany(),
+  ]);
+}
+
+async function seedIdentity(client: PrismaClient): Promise<void> {
+  const users = [
+    {
+      displayName: "Deniz Üye",
+      email: "member@film-platform.invalid",
+      id: "50000000-0000-4000-8000-000000000001",
+      name: "Deniz Üye",
+      roles: [UserRoleName.MEMBER],
+    },
+    {
+      displayName: "Ekin Editör",
+      email: "editor@film-platform.invalid",
+      id: "50000000-0000-4000-8000-000000000002",
+      name: "Ekin Editör",
+      roles: [UserRoleName.MEMBER, UserRoleName.EDITOR],
+    },
+    {
+      displayName: "Ada Yönetici",
+      email: "admin@film-platform.invalid",
+      id: "50000000-0000-4000-8000-000000000003",
+      name: "Ada Yönetici",
+      roles: [UserRoleName.MEMBER, UserRoleName.ADMIN],
+    },
+  ] as const;
+
+  for (const user of users) {
+    await client.user.create({
+      data: {
+        email: user.email,
+        emailVerified: new Date("2026-07-01T00:00:00.000Z"),
+        id: user.id,
+        name: user.name,
+        profile: {
+          create: { displayName: user.displayName },
+        },
+        roles: {
+          create: user.roles.map((role) => ({ grantedBy: user.id, role })),
+        },
+      },
+    });
+  }
 }
 
 async function seedCatalog(client: PrismaClient): Promise<void> {
@@ -451,8 +507,10 @@ async function main(): Promise<void> {
   const client = createDatabaseClient(environment.databaseUrl);
 
   try {
+    await resetIdentity(client);
     await seedCatalog(client);
-    process.stdout.write("Deterministic catalog fixtures seeded.\n");
+    await seedIdentity(client);
+    process.stdout.write("Deterministic catalog and member fixtures seeded.\n");
   } finally {
     await client.$disconnect();
   }

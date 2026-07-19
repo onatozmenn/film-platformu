@@ -47,6 +47,12 @@ enum SubtitleKind {
   FORCED
 }
 
+enum UserRoleName {
+  MEMBER
+  EDITOR
+  ADMIN
+}
+
 model Movie {
   id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   slug                  String            @unique(map: "movies_slug_key") @db.VarChar(96)
@@ -79,6 +85,9 @@ model Movie {
   metadataSources       MetadataSource[]
   videoAssets           VideoAsset[]
   contentRights         ContentRight[]
+  watchlistEntries      WatchlistEntry[]
+  ratings               Rating[]
+  watchProgress         WatchProgress[]
 
   @@index([publicationState, publishAt], map: "movies_publication_state_publish_at_idx")
   @@index([releaseDate], map: "movies_release_date_idx")
@@ -247,4 +256,150 @@ model ProcessedWebhook {
 
   @@index([processedAt], map: "processed_webhooks_processed_at_idx")
   @@map("processed_webhooks")
+}
+
+model User {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String?          @db.VarChar(160)
+  email         String?          @unique(map: "users_email_key") @db.VarChar(320)
+  emailVerified DateTime?        @map("email_verified") @db.Timestamptz(3)
+  image         String?          @db.Text
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  accounts      Account[]
+  sessions      Session[]
+  profile       UserProfile?
+  roles         UserRole[]       @relation("RoleSubject")
+  grantedRoles  UserRole[]       @relation("RoleGrantor")
+  watchlist     WatchlistEntry[]
+  ratings       Rating[]
+  progress      WatchProgress[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String  @db.VarChar(32)
+  provider          String  @db.VarChar(80)
+  providerAccountId String  @map("provider_account_id") @db.VarChar(191)
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String? @db.VarChar(80)
+  scope             String? @db.Text
+  id_token          String? @db.Text
+  session_state     String? @db.VarChar(255)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId], map: "accounts_provider_provider_account_id_key")
+  @@index([userId], map: "accounts_user_id_idx")
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionToken String   @unique(map: "sessions_session_token_key") @map("session_token") @db.VarChar(255)
+  userId       String   @map("user_id") @db.Uuid
+  expires      DateTime @db.Timestamptz(3)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "sessions_user_id_idx")
+  @@index([expires], map: "sessions_expires_idx")
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String   @db.VarChar(320)
+  token      String   @unique(map: "verification_tokens_token_key") @db.VarChar(255)
+  expires    DateTime @db.Timestamptz(3)
+
+  @@unique([identifier, token], map: "verification_tokens_identifier_token_key")
+  @@index([expires], map: "verification_tokens_expires_idx")
+  @@map("verification_tokens")
+}
+
+model UserProfile {
+  userId      String    @id @map("user_id") @db.Uuid
+  displayName String    @map("display_name") @db.VarChar(80)
+  locale      String    @default("tr-TR") @db.VarChar(10)
+  disabledAt  DateTime? @map("disabled_at") @db.Timestamptz(3)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([disabledAt, deletedAt], map: "user_profiles_account_state_idx")
+  @@map("user_profiles")
+}
+
+model UserRole {
+  userId    String       @map("user_id") @db.Uuid
+  role      UserRoleName
+  grantedBy String?      @map("granted_by") @db.Uuid
+  grantedAt DateTime     @default(now()) @map("granted_at") @db.Timestamptz(3)
+  user      User         @relation("RoleSubject", fields: [userId], references: [id], onDelete: Cascade)
+  grantor   User?        @relation("RoleGrantor", fields: [grantedBy], references: [id], onDelete: SetNull)
+
+  @@id([userId, role])
+  @@index([role, userId], map: "user_roles_role_user_id_idx")
+  @@index([grantedBy], map: "user_roles_granted_by_idx")
+  @@map("user_roles")
+}
+
+model AccountDeletionRequest {
+  userId      String    @id @map("user_id") @db.Uuid
+  requestedAt DateTime  @map("requested_at") @db.Timestamptz(3)
+  purgeAfter  DateTime  @map("purge_after") @db.Timestamptz(3)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+
+  @@index([completedAt, purgeAfter], map: "account_deletion_requests_due_idx")
+  @@map("account_deletion_requests")
+}
+
+model WatchlistEntry {
+  userId    String   @map("user_id") @db.Uuid
+  movieId   String   @map("movie_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@id([userId, movieId])
+  @@index([userId, createdAt(sort: Desc)], map: "watchlist_entries_user_id_created_at_idx")
+  @@index([movieId], map: "watchlist_entries_movie_id_idx")
+  @@map("watchlist_entries")
+}
+
+model Rating {
+  userId         String   @map("user_id") @db.Uuid
+  movieId        String   @map("movie_id") @db.Uuid
+  valueHalfStars Int      @map("value_half_stars")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie          Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@id([userId, movieId])
+  @@index([movieId], map: "ratings_movie_id_idx")
+  @@map("ratings")
+}
+
+model WatchProgress {
+  userId          String   @map("user_id") @db.Uuid
+  movieId         String   @map("movie_id") @db.Uuid
+  positionSeconds Float    @map("position_seconds") @db.DoublePrecision
+  durationSeconds Float    @map("duration_seconds") @db.DoublePrecision
+  completed       Boolean  @default(false)
+  observedAt      DateTime @map("observed_at") @db.Timestamptz(3)
+  lastWatchedAt   DateTime @map("last_watched_at") @db.Timestamptz(3)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie           Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@id([userId, movieId])
+  @@index([userId, lastWatchedAt(sort: Desc)], map: "watch_progress_user_id_last_watched_at_idx")
+  @@index([movieId], map: "watch_progress_movie_id_idx")
+  @@map("watch_progress")
 }

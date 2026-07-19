@@ -3,19 +3,29 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PrerollOpportunity } from "@/modules/advertising/domain/preroll-policy";
 
-const { consumeRateLimit, createSession, resolvePreroll, resolveTerritory, warn } = vi.hoisted(
-  () => ({
-    consumeRateLimit: vi.fn(() => true),
-    createSession: vi.fn(),
-    resolvePreroll: vi.fn<(headers: Headers) => PrerollOpportunity | null>(() => null),
-    resolveTerritory: vi.fn(() => "TR"),
-    warn: vi.fn(),
-  }),
-);
+const {
+  consumeRateLimit,
+  createSession,
+  getOptionalMemberSession,
+  getResumePosition,
+  resolvePreroll,
+  resolveTerritory,
+  warn,
+} = vi.hoisted(() => ({
+  consumeRateLimit: vi.fn(() => true),
+  createSession: vi.fn(),
+  getOptionalMemberSession: vi.fn(),
+  getResumePosition: vi.fn(),
+  resolvePreroll: vi.fn<(headers: Headers) => PrerollOpportunity | null>(() => null),
+  resolveTerritory: vi.fn(() => "TR"),
+  warn: vi.fn(),
+}));
 
 vi.mock("@/modules/advertising/server", () => ({
   advertisingService: { resolvePreroll },
 }));
+vi.mock("@/modules/identity/server", () => ({ getOptionalMemberSession }));
+vi.mock("@/modules/library/server", () => ({ libraryService: { getResumePosition } }));
 vi.mock("@/modules/playback/server", () => ({
   playbackService: { createSession },
   playbackSessionRateLimiter: { consume: consumeRateLimit },
@@ -48,6 +58,9 @@ beforeEach(() => {
   consumeRateLimit.mockReset();
   consumeRateLimit.mockReturnValue(true);
   createSession.mockReset();
+  getOptionalMemberSession.mockReset();
+  getOptionalMemberSession.mockResolvedValue(null);
+  getResumePosition.mockReset();
   resolvePreroll.mockReset();
   resolvePreroll.mockReturnValue(null);
   resolveTerritory.mockClear();
@@ -119,6 +132,44 @@ describe("POST /api/v1/playback/sessions", () => {
           tagUrl: "https://pubads.g.doubleclick.net/gampad/ads?npa=1",
         },
       },
+    });
+  });
+
+  it("adds only the signed-in member's resume position and fails open when it is unavailable", async () => {
+    createSession.mockResolvedValue({
+      kind: "success",
+      session: {
+        movie: { durationSeconds: 5_880, id: movieId, title: "Kıyıdaki Sessizlik" },
+        playback: {
+          expiresAt: "2026-07-19T12:05:00.000Z",
+          playbackId: "fake-playback-kiyidaki-sessizlik",
+          provider: "mux",
+          token: "fake_ps_opaque",
+        },
+        resumeAtSeconds: 0,
+        sessionId: "ps_opaque",
+      },
+    });
+    getOptionalMemberSession.mockResolvedValue({
+      expires: "2026-08-18T00:00:00.000Z",
+      user: { displayName: "Film üyesi", id: "user-owned", roles: ["MEMBER"] },
+    });
+    getResumePosition.mockResolvedValueOnce(913.2);
+
+    const resumed = await POST(request({ movieId }));
+    await expect(resumed.json()).resolves.toMatchObject({ data: { resumeAtSeconds: 913.2 } });
+    expect(getResumePosition).toHaveBeenCalledWith({
+      actorUserId: "user-owned",
+      movieId,
+      ownerUserId: "user-owned",
+    });
+
+    getResumePosition.mockRejectedValueOnce(new Error("private database detail"));
+    const fallback = await POST(request({ movieId }));
+    await expect(fallback.json()).resolves.toMatchObject({ data: { resumeAtSeconds: 0 } });
+    expect(warn).toHaveBeenCalledWith("library.resume_failed", {
+      outcome: "zero",
+      requestId: "req_route_test",
     });
   });
 

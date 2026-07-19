@@ -1,12 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { formatNumber } from "@/shared/i18n/formatters";
 
 import type { MovieDetailView } from "../application/catalog-query-port";
 import { MoviePosterItem } from "./movie-poster-item";
 
-export function MovieDetailScreen({ movie }: Readonly<{ movie: MovieDetailView }>) {
+export function MovieDetailScreen({
+  memberActions,
+  movie,
+}: Readonly<{ memberActions?: ReactNode; movie: MovieDetailView }>) {
   const usesLongTitle = movie.title.length > 50;
 
   return (
@@ -42,13 +46,16 @@ export function MovieDetailScreen({ movie }: Readonly<{ movie: MovieDetailView }
             )}
             <span>{movie.genres.join(" · ")}</span>
           </p>
-          {movie.isPlayable ? (
-            <Link className="primary-action" href={`/izle/${movie.slug}`}>
-              İzle
-            </Link>
-          ) : (
-            <p className="availability-note">Bu film şu anda oynatılamıyor.</p>
-          )}
+          <div className="detail-actions">
+            {movie.isPlayable ? (
+              <Link className="primary-action" href={`/izle/${movie.slug}`}>
+                İzle
+              </Link>
+            ) : (
+              <p className="availability-note">Bu film şu anda oynatılamıyor.</p>
+            )}
+            {memberActions}
+          </div>
         </div>
       </header>
 

@@ -39,17 +39,17 @@ Example:
 
 `detail` is safe Turkish display copy. Internal exception messages, provider failures, rights dates, and authorization reasoning are logged only in redacted server form.
 
-| Code | HTTP | Meaning |
-|---|---:|---|
-| `VALIDATION_FAILED` | 400 | Request shape or value is invalid |
-| `AUTHENTICATION_REQUIRED` | 401 | A member-only operation lacks a valid session |
-| `FORBIDDEN` | 403 | Authenticated actor lacks permission |
-| `PLAYBACK_NOT_AVAILABLE` | 403 | Rights, publication, territory, or asset policy denies playback |
-| `NOT_FOUND` | 404 | Resource is absent or intentionally concealed |
-| `CONFLICT` | 409 | State or uniqueness conflict |
-| `RATE_LIMITED` | 429 | Request budget exceeded |
-| `PROVIDER_UNAVAILABLE` | 503 | Required provider cannot complete a fail-closed operation |
-| `INTERNAL_ERROR` | 500 | Unexpected failure with no leaked detail |
+| Code                      | HTTP | Meaning                                                         |
+| ------------------------- | ---: | --------------------------------------------------------------- |
+| `VALIDATION_FAILED`       |  400 | Request shape or value is invalid                               |
+| `AUTHENTICATION_REQUIRED` |  401 | A member-only operation lacks a valid session                   |
+| `FORBIDDEN`               |  403 | Authenticated actor lacks permission                            |
+| `PLAYBACK_NOT_AVAILABLE`  |  403 | Rights, publication, territory, or asset policy denies playback |
+| `NOT_FOUND`               |  404 | Resource is absent or intentionally concealed                   |
+| `CONFLICT`                |  409 | State or uniqueness conflict                                    |
+| `RATE_LIMITED`            |  429 | Request budget exceeded                                         |
+| `PROVIDER_UNAVAILABLE`    |  503 | Required provider cannot complete a fail-closed operation       |
+| `INTERNAL_ERROR`          |  500 | Unexpected failure with no leaked detail                        |
 
 ## Runtime Endpoints
 
@@ -122,7 +122,7 @@ Response:
 }
 ```
 
-`advertising` is `null` when ads are disabled by environment, consent policy, frequency policy, or provider configuration. An ad load error after this response does not trigger another session request automatically.
+`advertising` is `null` when ads are disabled by environment, consent policy, frequency policy, or provider configuration. An ad load error after this response does not trigger another session request automatically. `resumeAtSeconds` is derived only from the authenticated member's stored progress and falls back to `0` if identity or library state is unavailable. Guest resume remains in the versioned browser-local progress store and is never merged into an account.
 
 The deterministic non-production video fake may append `fixtureSourceUrl` and `fixtureTextTracks` under `playback` so browser tests can play an owned local asset. These fields are absent from Mux grants and are rejected as configuration in production; they never accept caller-provided URLs.
 
@@ -157,14 +157,16 @@ Requires a member session.
 
 Return `204 No Content`. The service clamps valid values, ignores stale observations, and computes completion. Rate-limit normal updates to one accepted write per user and film per 10 seconds; pause, ended, and page-exit updates may bypass client throttling but still pass server coalescing.
 
-`DELETE /api/v1/me/progress/:movieId` clears the member's progress and returns `204` whether or not a row existed.
+`DELETE /api/v1/me/progress/:movieId` clears the member's progress and returns `204` whether or not a row existed. Deletion remains available after a film becomes non-public.
+
+`DELETE /api/v1/me/progress` clears all progress owned by the authenticated member and returns `204`. It does not remove watchlist or rating rows.
 
 ### Set Watchlist Membership
 
 - `PUT /api/v1/me/watchlist/:movieId` returns `204` after idempotent add.
 - `DELETE /api/v1/me/watchlist/:movieId` returns `204` after idempotent remove.
 
-Both require a member session and a catalog-visible film. The same application commands may back progressively enhanced Server Actions.
+Both require a member session. Add requires a catalog-visible film; remove remains available after a film becomes non-public. The same application commands may back progressively enhanced Server Actions.
 
 ### Set Rating
 
@@ -174,7 +176,19 @@ Both require a member session and a catalog-visible film. The same application c
 { "valueHalfStars": 8 }
 ```
 
-Require an integer from 1 through 10. Return `204`. `DELETE` removes the member's rating idempotently.
+Require an integer from 1 through 10. Return `204`. `DELETE` removes the member's rating idempotently even after a film becomes non-public.
+
+### Delete Own Account
+
+`DELETE /api/v1/me/account`
+
+Requires a same-origin member session and accepts no body or user ID. It immediately disables the profile, sets the irreversible deletion timestamp, revokes database sessions and outstanding verification links, and records a purge time exactly 30 days later. Return `204` after a first or repeated accepted request. Return `409` when deleting the account would remove the final active admin. Final purge is performed only by the authenticated retention command.
+
+### Email-Link Authentication
+
+`GET|POST /api/auth/[...nextauth]` is owned by Auth.js and uses database sessions plus the configured email adapter. Sign-in and verification responses remain generic and do not reveal account existence. The guarded `/api/test/auth/magic-link` retrieval harness exists only with the non-production fake provider, requires `X-Film-Test-Harness: 1`, consumes each link once, and is concealed as `404` otherwise.
+
+Email-link sign-in POSTs use a dedicated five-request-per-minute production budget keyed only from a deployment-trusted real IP. Preview/test fakes use a larger shared bucket so isolated deterministic browser contexts cannot exhaust one another. Exceeding the production budget returns private `429` Problem Details without provider or account state.
 
 ### Health
 
@@ -218,17 +232,17 @@ Neither endpoint returns versions, environment values, connection details, or pr
 
 Admin UI uses typed application commands rather than a broad CRUD API:
 
-| Command | Minimum role | Important precondition |
-|---|---|---|
-| `CreateMovieDraft` | Editor | Valid owned or allowed imported metadata |
-| `UpdateMovieEditorialData` | Editor | Optimistic revision matches |
-| `SetMovieCredits` | Editor | People and ordering validate |
-| `CreateOrAttachVideoAsset` | Admin | Provider request is idempotent |
-| `SetContentRights` | Admin | Valid, non-contradictory time window |
-| `ScheduleMovie` | Editor | Completeness and future schedule pass |
-| `PublishMovie` | Editor | Full publication and watchability policy passes |
-| `UnpublishMovie` | Editor | Reason supplied for audit |
-| `GrantRole` / `RevokeRole` | Admin | Cannot remove the final active admin |
+| Command                    | Minimum role | Important precondition                          |
+| -------------------------- | ------------ | ----------------------------------------------- |
+| `CreateMovieDraft`         | Editor       | Valid owned or allowed imported metadata        |
+| `UpdateMovieEditorialData` | Editor       | Optimistic revision matches                     |
+| `SetMovieCredits`          | Editor       | People and ordering validate                    |
+| `CreateOrAttachVideoAsset` | Admin        | Provider request is idempotent                  |
+| `SetContentRights`         | Admin        | Valid, non-contradictory time window            |
+| `ScheduleMovie`            | Editor       | Completeness and future schedule pass           |
+| `PublishMovie`             | Editor       | Full publication and watchability policy passes |
+| `UnpublishMovie`           | Editor       | Reason supplied for audit                       |
+| `GrantRole` / `RevokeRole` | Admin        | Cannot remove the final active admin            |
 
 Every command returns:
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search } from "lucide-react";
+import { Menu, Search, UserRound } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -15,9 +15,16 @@ const PublicDialogLayer = dynamic(
 type PublicLayer = "menu" | "search";
 
 export function PublicShell({
+  accountHref = "/giris",
+  accountLabel = "Oturum aç",
   children,
   siteName,
-}: Readonly<{ children: React.ReactNode; siteName: string }>) {
+}: Readonly<{
+  accountHref?: string;
+  accountLabel?: string;
+  children: React.ReactNode;
+  siteName: string;
+}>) {
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
   const [activeLayer, setActiveLayer] = useState<PublicLayer | null>(null);
@@ -62,6 +69,11 @@ export function PublicShell({
               <span className="visually-hidden mobile-only">Ara</span>
             </button>
 
+            <Link className="header-account-link desktop-only" href={accountHref}>
+              <UserRound aria-hidden="true" size={18} strokeWidth={2} />
+              <span>{accountLabel}</span>
+            </Link>
+
             <button
               ref={menuTriggerRef}
               aria-expanded={activeLayer === "menu"}
@@ -80,6 +92,8 @@ export function PublicShell({
       {activeLayer === null ? null : (
         <PublicDialogLayer
           kind={activeLayer}
+          accountHref={accountHref}
+          accountLabel={accountLabel}
           query={headerQuery}
           onOpenChange={(open) => {
             if (!open) {

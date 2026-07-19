@@ -61,6 +61,7 @@ type MovieWithDetail = Prisma.MovieGetPayload<{
 }>;
 
 type SearchIdRow = Readonly<{ id: string }>;
+type RatingMap = ReadonlyMap<string, MovieCardView["rating"]>;
 
 function visibleMovieWhere(now: Date): Prisma.MovieWhereInput {
   return {
@@ -106,26 +107,60 @@ function mapBackdrop(movie: Movie): CatalogImage | null {
   );
 }
 
-function mapCard(movie: Movie): MovieCardView {
+function mapCard(movie: Movie, ratings: RatingMap = new Map()): MovieCardView {
   return {
     id: movie.id,
     poster: mapPoster(movie),
-    rating: null,
+    rating: ratings.get(movie.id) ?? null,
     slug: movie.slug,
     title: movie.title,
     year: movie.releaseDate.getUTCFullYear(),
   };
 }
 
-function mapFeatured(movie: MovieWithGenres): FeaturedMovieView {
+function mapFeatured(movie: MovieWithGenres, ratings: RatingMap = new Map()): FeaturedMovieView {
   return {
-    ...mapCard(movie),
+    ...mapCard(movie, ratings),
     ageRating: movie.ageRating,
     backdrop: mapBackdrop(movie),
     genres: movie.genres.map(({ genre }) => genre.name),
     runtimeMinutes: movie.runtimeMinutes,
     synopsis: movie.synopsis,
   };
+}
+
+async function loadAcceptedRatings(
+  client: PrismaClient,
+  movieIds: readonly string[],
+): Promise<RatingMap> {
+  if (movieIds.length === 0) {
+    return new Map();
+  }
+  const aggregates = await client.rating.groupBy({
+    by: ["movieId"],
+    where: {
+      movieId: { in: [...movieIds] },
+      user: { profile: { is: { deletedAt: null, disabledAt: null } } },
+    },
+    _avg: { valueHalfStars: true },
+    _count: { _all: true },
+  });
+  return new Map(
+    aggregates.flatMap((aggregate) => {
+      const averageHalfStars = aggregate._avg.valueHalfStars;
+      return aggregate._count._all < 5 || averageHalfStars === null
+        ? []
+        : [
+            [
+              aggregate.movieId,
+              {
+                average: Math.round((averageHalfStars / 2) * 10) / 10,
+                count: aggregate._count._all,
+              },
+            ] as const,
+          ];
+    }),
+  );
 }
 
 function creditLabel(kind: CreditKind, displayLabel: string | null): string {
@@ -247,12 +282,55 @@ async function loadCardsByIds(
   const movies = await client.movie.findMany({
     where: { AND: [visibleMovieWhere(now), { id: { in: [...ids] } }] },
   });
+  const ratings = await loadAcceptedRatings(client, ids);
   const byId = new Map(movies.map((movie) => [movie.id, movie] as const));
 
   return ids.flatMap((id) => {
     const movie = byId.get(id);
-    return movie === undefined ? [] : [mapCard(movie)];
+    return movie === undefined ? [] : [mapCard(movie, ratings)];
   });
+}
+
+async function ratingSortedMovieIds(
+  client: PrismaClient,
+  filters: CatalogFilters,
+  now: Date,
+  limit: number,
+  offset: number,
+): Promise<readonly string[]> {
+  const rows = await client.$queryRaw<SearchIdRow[]>`
+    SELECT m.id
+    FROM movies AS m
+    LEFT JOIN (
+      SELECT r.movie_id, AVG(r.value_half_stars) / 2.0 AS average, COUNT(*) AS count
+      FROM ratings AS r
+      INNER JOIN user_profiles AS profile ON profile.user_id = r.user_id
+      WHERE profile.disabled_at IS NULL AND profile.deleted_at IS NULL
+      GROUP BY r.movie_id
+    ) AS accepted_rating ON accepted_rating.movie_id = m.id
+    WHERE m.publication_state = 'PUBLISHED'::"PublicationState"
+      AND (m.publish_at IS NULL OR m.publish_at <= ${now})
+      AND (
+        ${filters.genre}::text IS NULL
+        OR EXISTS (
+          SELECT 1
+          FROM movie_genres AS movie_genre
+          INNER JOIN genres AS genre ON genre.id = movie_genre.genre_id
+          WHERE movie_genre.movie_id = m.id AND genre.slug = ${filters.genre}
+        )
+      )
+      AND (
+        ${filters.year}::integer IS NULL
+        OR EXTRACT(YEAR FROM m.release_date)::integer = ${filters.year}
+      )
+    ORDER BY
+      CASE WHEN accepted_rating.count >= 5 THEN accepted_rating.average END DESC NULLS LAST,
+      m.title ASC,
+      m.id ASC
+    LIMIT ${limit}
+    OFFSET ${offset}
+  `;
+  return rows.map(({ id }) => id);
 }
 
 export function createPrismaCatalogQuery(
@@ -287,15 +365,25 @@ export function createPrismaCatalogQuery(
         throw new Error("Published home page has no featured movie");
       }
 
+      const homeMovies = collections.flatMap((collection) =>
+        collection.movies.map(({ movie }) => movie),
+      );
+      const ratings = await loadAcceptedRatings(
+        client,
+        homeMovies.map(({ id }) => id),
+      );
+
       const rails: HomeRailView[] = railDefinitions.map((definition) => ({
         id: definition.id,
-        movies: (bySlug.get(definition.slug)?.movies ?? []).map(({ movie }) => mapCard(movie)),
+        movies: (bySlug.get(definition.slug)?.movies ?? []).map(({ movie }) =>
+          mapCard(movie, ratings),
+        ),
         title: definition.title,
         variant: definition.variant,
         viewAllHref: definition.viewAllHref,
       }));
 
-      return { featured: mapFeatured(featuredMovie), rails };
+      return { featured: mapFeatured(featuredMovie, ratings), rails };
     },
 
     async getMovieBySlug(slug: string): Promise<MovieDetailView | null> {
@@ -337,16 +425,18 @@ export function createPrismaCatalogQuery(
             right.overlap - left.overlap ||
             left.movie.title.localeCompare(right.movie.title, "tr-TR"),
         )
-        .slice(0, 5)
-        .map(({ movie: candidate }) => mapCard(candidate));
+        .slice(0, 5);
+      const ratings = await loadAcceptedRatings(client, [
+        movie.id,
+        ...similarMovies.map(({ movie: candidate }) => candidate.id),
+      ]);
 
       return {
-        ...mapFeatured(movie),
+        ...mapFeatured(movie, ratings),
         credits: groupCredits(movie),
         isPlayable: false,
         originalTitle: movie.originalTitle,
-        rating: null,
-        similarMovies,
+        similarMovies: similarMovies.map(({ movie: candidate }) => mapCard(candidate, ratings)),
         subtitleLanguages: movie.videoAssets.flatMap((asset) =>
           asset.subtitleTracks.map((track) => track.label),
         ),
@@ -388,7 +478,15 @@ export function createPrismaCatalogQuery(
       const offset = (pageInfo.page - 1) * pageInfo.pageSize;
       let movies: readonly Movie[];
 
-      if (collectionSlug === null) {
+      if (filters.sort === "puan") {
+        const ids = await ratingSortedMovieIds(client, filters, at, pageInfo.pageSize, offset);
+        const ratingMovies = await client.movie.findMany({ where: { id: { in: [...ids] } } });
+        const byId = new Map(ratingMovies.map((movie) => [movie.id, movie] as const));
+        movies = ids.flatMap((id) => {
+          const movie = byId.get(id);
+          return movie === undefined ? [] : [movie];
+        });
+      } else if (collectionSlug === null) {
         movies = await client.movie.findMany({
           where,
           orderBy:
@@ -430,6 +528,10 @@ export function createPrismaCatalogQuery(
         movies = [...rankedEntries.map(({ movie }) => movie), ...unrankedMovies];
       }
 
+      const ratings = await loadAcceptedRatings(
+        client,
+        movies.map(({ id }) => id),
+      );
       return {
         availableGenres: genres.map(({ name, slug: genreSlug }) => ({
           name,
@@ -438,7 +540,7 @@ export function createPrismaCatalogQuery(
         availableYears: [
           ...new Set(visibleMovies.map(({ releaseDate }) => releaseDate.getUTCFullYear())),
         ].sort((left, right) => right - left),
-        movies: movies.map(mapCard),
+        movies: movies.map((movie) => mapCard(movie, ratings)),
         pageInfo,
         total,
       };

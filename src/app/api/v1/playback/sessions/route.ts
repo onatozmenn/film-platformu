@@ -2,6 +2,8 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { advertisingService } from "@/modules/advertising/server";
+import { getOptionalMemberSession } from "@/modules/identity/server";
+import { libraryService } from "@/modules/library/server";
 import {
   playbackService,
   playbackSessionRateLimiter,
@@ -79,6 +81,19 @@ export async function POST(request: NextRequest): Promise<Response> {
       case "provider-unavailable":
         return problemResponse("PROVIDER_UNAVAILABLE", requestId);
       case "success": {
+        let resumeAtSeconds = 0;
+        try {
+          const session = await getOptionalMemberSession();
+          if (session !== null) {
+            resumeAtSeconds = await libraryService.getResumePosition({
+              actorUserId: session.user.id,
+              movieId: parsed.movieId,
+              ownerUserId: session.user.id,
+            });
+          }
+        } catch {
+          logger.warn("library.resume_failed", { outcome: "zero", requestId });
+        }
         let advertising = null;
         try {
           advertising = advertisingService.resolvePreroll(request.headers);
@@ -86,7 +101,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           logger.warn("advertising.decision_failed", { outcome: "disabled", requestId });
         }
         return Response.json(
-          { data: { ...result.session, advertising } },
+          { data: { ...result.session, advertising, resumeAtSeconds } },
           {
             headers: {
               "Cache-Control": "private, no-store",

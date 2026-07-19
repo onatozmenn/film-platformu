@@ -37,4 +37,16 @@ describe("MoviePosterItem", () => {
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getByText("2026")).toBeVisible();
   });
+
+  it("supports an accessible continue-watching destination and progress cue", () => {
+    render(
+      <MoviePosterItem href="/izle/kiyidaki-sessizlik" movie={imageMovie} progressPercent={42} />,
+    );
+
+    expect(screen.getByRole("link", { name: /Kıyıdaki Sessizlik/u })).toHaveAttribute(
+      "href",
+      "/izle/kiyidaki-sessizlik",
+    );
+    expect(screen.getByLabelText("Yüzde 42 izlendi")).toBeVisible();
+  });
 });

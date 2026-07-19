@@ -27,7 +27,10 @@ export const territoryResolver = createTerritoryResolver(
   process.env.VERCEL === "1",
 );
 
-export const playbackSessionRateLimiter = createFixedWindowRateLimiter(20, 60_000);
+export const playbackSessionRateLimiter = createFixedWindowRateLimiter(
+  environment.nodeEnvironment === "production" ? 20 : 200,
+  60_000,
+);
 
 export const playbackService = createPlaybackService({
   clock: () => new Date(),

@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { ConsentAwareWatchPlayer } from "@/modules/advertising/ui/consent-aware-watch-player";
 import { parseMovieSlug } from "@/modules/catalog";
 import { catalogQueries } from "@/modules/catalog/server";
+import { getOptionalMemberSession } from "@/modules/identity/server";
+import { libraryService } from "@/modules/library/server";
+import { MemberLibraryControls } from "@/modules/library/ui/member-library-controls";
 import { WatchScreen } from "@/modules/playback/ui/watch-screen";
 import { parsePublicEnvironment } from "@/shared/config/public-environment";
 
@@ -27,9 +30,21 @@ export default async function WatchPage({ params }: WatchPageProps) {
   const { siteName } = parsePublicEnvironment({
     NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME,
   });
+  const session = await getOptionalMemberSession();
+  const memberState =
+    session === null
+      ? null
+      : await libraryService.getMovieState({
+          actorUserId: session.user.id,
+          movieId: movie.id,
+          ownerUserId: session.user.id,
+        });
 
   return (
     <WatchScreen
+      accountHref={session === null ? "/giris" : "/hesap"}
+      accountLabel={session === null ? "Oturum aç" : session.user.displayName}
+      memberActions={<MemberLibraryControls initialState={memberState} movieId={movie.id} />}
       movie={{
         ageRating: movie.ageRating,
         id: movie.id,
@@ -39,7 +54,14 @@ export default async function WatchPage({ params }: WatchPageProps) {
         title: movie.title,
         year: movie.year,
       }}
-      player={<ConsentAwareWatchPlayer key={movie.id} movieId={movie.id} title={movie.title} />}
+      player={
+        <ConsentAwareWatchPlayer
+          key={movie.id}
+          movieId={movie.id}
+          progressMode={session === null ? "guest" : "member"}
+          title={movie.title}
+        />
+      }
       siteName={siteName}
     />
   );

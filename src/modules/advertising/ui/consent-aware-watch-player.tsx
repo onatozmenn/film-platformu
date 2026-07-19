@@ -6,6 +6,11 @@ import { startTransition, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
 import type { AdvertisingOutcome } from "@/modules/advertising/ui/ad-outcome";
+import {
+  createPlaybackProgressController,
+  type PlaybackProgressMode,
+  type ProgressObservationIntent,
+} from "@/modules/library/ui/playback-progress-controller";
 
 const adTagUrlSchema = z
   .url()
@@ -74,7 +79,11 @@ const sessionResponseSchema = z
             token: z.string().min(1).max(8_192),
           })
           .strict(),
-        resumeAtSeconds: z.literal(0),
+        resumeAtSeconds: z
+          .number()
+          .finite()
+          .nonnegative()
+          .max(12 * 60 * 60),
         sessionId: z.string().regex(/^ps_[a-zA-Z0-9]+$/u),
       })
       .strict(),
@@ -148,20 +157,34 @@ function stateCopy(state: PlayerState): string | null {
 
 export function ConsentAwareWatchPlayer({
   movieId,
+  progressMode = "guest",
   title,
-}: Readonly<{ movieId: string; title: string }>) {
+}: Readonly<{ movieId: string; progressMode?: PlaybackProgressMode; title: string }>) {
   const [attempt, setAttempt] = useState(0);
   const [adTagUrl, setAdTagUrl] = useState<string | undefined>();
   const [prerollMode, setPrerollMode] = useState<PrerollMode>(null);
+  const [resumeAtSeconds, setResumeAtSeconds] = useState(0);
   const [session, setSession] = useState<PlaybackSession | null>(null);
   const [state, setState] = useState<PlayerState>({ kind: "requesting" });
   const adContainerRef = useRef<HTMLDivElement>(null);
   const adOutcomeReportedRef = useRef(false);
   const playerRef = useRef<MuxPlayerRefAttributes>(null);
+  const progressControllerRef = useRef<ReturnType<typeof createPlaybackProgressController> | null>(
+    null,
+  );
+
+  const observeProgress = (intent: ProgressObservationIntent) => {
+    const currentTime = playerRef.current?.currentTime;
+    if (currentTime === undefined) {
+      return;
+    }
+    void progressControllerRef.current?.observe(currentTime, intent);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
     let isMounted = true;
+    progressControllerRef.current = null;
     const timeout = window.setTimeout(() => {
       controller.abort();
       if (isMounted) {
@@ -199,10 +222,25 @@ export function ConsentAwareWatchPlayer({
           startTransition(() => setState({ kind: "retryable", requestId }));
           return;
         }
+        const progressController = createPlaybackProgressController({
+          durationSeconds: parsed.data.data.movie.durationSeconds,
+          fetcher: (input, init) => fetch(input, init),
+          mode: progressMode,
+          movieId,
+          storage: {
+            getItem: (key) => window.localStorage.getItem(key),
+            setItem: (key, value) => window.localStorage.setItem(key, value),
+          },
+        });
+        const resolvedResumeAt = progressController.resolveResumeAt(
+          parsed.data.data.resumeAtSeconds,
+        );
+        progressControllerRef.current = progressController;
         startTransition(() => {
           adOutcomeReportedRef.current = false;
           setAdTagUrl(undefined);
           setPrerollMode(null);
+          setResumeAtSeconds(resolvedResumeAt);
           setSession(parsed.data.data);
           setState({
             kind: parsed.data.data.advertising === null ? "loading" : "preparing-preroll",
@@ -222,7 +260,30 @@ export function ConsentAwareWatchPlayer({
       controller.abort();
       window.clearTimeout(timeout);
     };
-  }, [attempt, movieId]);
+  }, [attempt, movieId, progressMode]);
+
+  useEffect(() => {
+    if (session === null) {
+      return;
+    }
+    const flush = () => {
+      const currentTime = playerRef.current?.currentTime;
+      if (currentTime !== undefined) {
+        void progressControllerRef.current?.observe(currentTime, "flush");
+      }
+    };
+    const flushWhenHidden = () => {
+      if (document.visibilityState === "hidden") {
+        flush();
+      }
+    };
+    document.addEventListener("visibilitychange", flushWhenHidden);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", flushWhenHidden);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [session]);
 
   useEffect(() => {
     const currentSession = session;
@@ -362,6 +423,7 @@ export function ConsentAwareWatchPlayer({
           metadataVideoTitle={title}
           playsInline
           preload="metadata"
+          startTime={resumeAtSeconds}
           {...(adTagUrl === undefined ? {} : { adTagUrl, allowAdBlocker: true })}
           {...(session.playback.fixtureSourceUrl === undefined
             ? {
@@ -373,9 +435,12 @@ export function ConsentAwareWatchPlayer({
             setState((current) => (isPrerollState(current) ? current : { kind: "ready" }))
           }
           onError={() => setState({ kind: "retryable", requestId: null })}
+          onEnded={() => observeProgress("flush")}
+          onPause={() => observeProgress("flush")}
           onPlaying={() =>
             setState((current) => (isPrerollState(current) ? current : { kind: "ready" }))
           }
+          onTimeUpdate={() => observeProgress("periodic")}
           onWaiting={() =>
             setState((current) => (isPrerollState(current) ? current : { kind: "buffering" }))
           }
@@ -412,7 +477,9 @@ export function ConsentAwareWatchPlayer({
                 adOutcomeReportedRef.current = false;
                 setAdTagUrl(undefined);
                 setPrerollMode(null);
+                setResumeAtSeconds(0);
                 setSession(null);
+                progressControllerRef.current = null;
                 setState({ kind: "requesting" });
                 setAttempt((current) => current + 1);
               }}

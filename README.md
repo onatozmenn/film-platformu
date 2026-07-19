@@ -2,7 +2,7 @@
 
 Film Platform is a Turkish-first, ad-supported discovery and streaming product for films the operator owns or is licensed to distribute. Visitors can watch without an account; optional membership adds a watchlist, half-star ratings, and synchronized progress.
 
-The repository now contains the WP-00 application foundation and the WP-01 fixture-backed visual catalog: responsive home rails, URL-driven catalog filters, keyboard search, and film detail screens. PostgreSQL-backed catalog persistence begins in WP-02.
+The repository contains the remotely validated WP-00 through WP-04 slices and the active WP-05 member implementation: PostgreSQL-backed discovery, licensed guest playback, consent-aware preroll handling, Auth.js email-link sessions, synchronized member library state, and deterministic provider fakes.
 
 ## Fixed MVP Decisions
 
@@ -55,6 +55,8 @@ Available discovery routes:
 - `/arama?q=` searches and paginates fictional title, original-title, and credited-person data with keyboard suggestions.
 - `/film/[slug]` renders editorial detail, optional metadata, and deterministic similar films.
 - `/izle/[slug]` requests a private, territory-checked playback session and renders the route-isolated Mux Player experience.
+- `/giris` starts the account-enumeration-safe email-link flow when an identity provider is configured.
+- `/hesap` shows the signed-in member's watchlist, continue-watching history, session controls, and irreversible account-deletion command.
 
 WP-03 exposes an `/izle` action only when fresh publication, trusted-territory rights, and active-ready asset policy passes. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md); owned playback fixture provenance is recorded in [`public/fixtures/playback/ATTRIBUTION.md`](public/fixtures/playback/ATTRIBUTION.md).
 
@@ -81,7 +83,7 @@ pnpm check:budgets
 
 `pnpm check:budgets` requires an existing production build plus Chromium and starts an isolated production server to enforce the public-route gzip targets.
 
-TMDB metadata support is disabled by default and its synthetic contract tests make no live request. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. Advertising defaults to disabled; browser tests opt into a deterministic fake and a Google-owned sample tag without making an ad-provider request. No Mux, TMDB, email, advertising, or production credential is required for local discovery and playback tests.
+TMDB metadata support is disabled by default and its synthetic contract tests make no live request. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. Advertising defaults to disabled; browser tests opt into a deterministic fake and a Google-owned sample tag without making an ad-provider request. Identity and internal retention jobs also default to disabled; their deterministic test adapters require no production credential. No Mux, TMDB, email, advertising, or production credential is required for local discovery and playback tests.
 
 ## Content Boundary
 

@@ -50,6 +50,12 @@ Maintain the exact variable names and requirement matrix in `.env.example` and t
 | `MUX_SIGNING_KEY_ID`, `MUX_SIGNING_PRIVATE_KEY` | Server | Signed-playback credentials, required only when `VIDEO_PROVIDER=mux`; private key stays server-only. |
 | `ADVERTISING_PROVIDER` | Server | Defaults to `disabled`. The deterministic `fake` is allowed only outside production; production rejects every non-disabled value until ADR 0004 is legally reviewed and accepted. |
 | `ADVERTISING_TEST_SCENARIO` | Local/test process | Optional fake outcome: `blocked`, `completed`, `empty`, `error`, or `timeout`; rejected unless `ADVERTISING_PROVIDER=fake`. |
+| `AUTH_EMAIL_PROVIDER` | Server | Defaults to `disabled`; `fake` is non-production only and `smtp` requires the complete sender/server configuration. |
+| `AUTH_SECRET` | Server secret | Required when email authentication is enabled; at least 32 characters and never exposed or logged. |
+| `AUTH_EMAIL_FROM`, `AUTH_SMTP_URL` | Server | Sender is required for enabled identity; SMTP URL is required only for `smtp` and must use `smtp:` or `smtps:`. |
+| `NEXTAUTH_URL` | Server | Canonical Auth.js callback origin; set to the same trusted origin as `SITE_ORIGIN` for each deployment. |
+| `CRON_SECRET` | Server secret | Dedicated 32+ character bearer credential for internal scheduled commands. Absence disables the transport. |
+| `RETENTION_BATCH_LIMIT` | Server | Integer `1..500`, defaults to `100`, and bounds one retention invocation. |
 
 Provider-specific variables are added to this matrix by their owning work package. Presence alone never enables an integration.
 

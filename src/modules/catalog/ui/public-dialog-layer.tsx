@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRef } from "react";
 
 type PublicDialogLayerProps = Readonly<{
+  accountHref: string;
+  accountLabel: string;
   kind: "menu" | "search";
   onOpenChange: (open: boolean) => void;
   onQueryChange: (query: string) => void;
@@ -21,6 +23,8 @@ function CloseButton() {
 }
 
 export function PublicDialogLayer({
+  accountHref,
+  accountLabel,
   kind,
   onOpenChange,
   onQueryChange,
@@ -89,6 +93,9 @@ export function PublicDialogLayer({
               </Link>
               <Link href="/arama" onClick={() => onOpenChange(false)}>
                 Arama
+              </Link>
+              <Link href={accountHref} onClick={() => onOpenChange(false)}>
+                {accountLabel}
               </Link>
             </nav>
           </Dialog.Content>

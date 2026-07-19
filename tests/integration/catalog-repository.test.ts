@@ -203,4 +203,56 @@ describe("Prisma catalog query", () => {
       }),
     ).rejects.toThrow();
   });
+
+  it("publishes and sorts only aggregates from at least five active members", async () => {
+    const movie = await client.movie.findUniqueOrThrow({ where: { slug: "kiyidaki-sessizlik" } });
+    const emails = Array.from(
+      { length: 6 },
+      (_, index) => `catalog-rating-${index + 1}@film-platform.invalid`,
+    );
+    await client.user.deleteMany({ where: { email: { in: emails } } });
+
+    try {
+      const users = await Promise.all(
+        emails.map((email, index) =>
+          client.user.create({
+            data: {
+              email,
+              profile: {
+                create: {
+                  displayName: `Puan Üyesi ${index + 1}`,
+                  ...(index === 5 ? { disabledAt: fixedNow } : {}),
+                },
+              },
+              roles: { create: { role: "MEMBER" } },
+            },
+          }),
+        ),
+      );
+      await client.rating.createMany({
+        data: users.map((user, index) => ({
+          movieId: movie.id,
+          userId: user.id,
+          valueHalfStars: [10, 9, 8, 7, 6, 2][index] ?? 2,
+        })),
+      });
+
+      await expect(query.getMovieBySlug(movie.slug)).resolves.toMatchObject({
+        rating: { average: 4, count: 5 },
+      });
+      const sorted = await query.listMovies({ genre: null, page: 1, sort: "puan", year: null });
+      expect(sorted.movies[0]).toMatchObject({
+        id: movie.id,
+        rating: { average: 4, count: 5 },
+      });
+
+      await client.userProfile.update({
+        where: { userId: users[0]!.id },
+        data: { disabledAt: fixedNow },
+      });
+      await expect(query.getMovieBySlug(movie.slug)).resolves.toMatchObject({ rating: null });
+    } finally {
+      await client.user.deleteMany({ where: { email: { in: emails } } });
+    }
+  });
 });

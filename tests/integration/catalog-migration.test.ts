@@ -67,6 +67,8 @@ describe("catalog migration replay", () => {
       `;
 
       expect(tables.map(({ tableName }) => tableName)).toEqual([
+        "account_deletion_requests",
+        "accounts",
         "collection_movies",
         "collections",
         "content_rights",
@@ -77,8 +79,16 @@ describe("catalog migration replay", () => {
         "movies",
         "people",
         "processed_webhooks",
+        "ratings",
+        "sessions",
         "subtitle_tracks",
+        "user_profiles",
+        "user_roles",
+        "users",
+        "verification_tokens",
         "video_assets",
+        "watch_progress",
+        "watchlist_entries",
       ]);
     } finally {
       await replayClient.$disconnect();

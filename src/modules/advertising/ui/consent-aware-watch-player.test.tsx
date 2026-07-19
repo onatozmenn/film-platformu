@@ -2,36 +2,70 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { Children, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { playMux } = vi.hoisted(() => ({ playMux: vi.fn(async () => undefined) }));
+const { playMux, playerState } = vi.hoisted(() => ({
+  playMux: vi.fn(async () => undefined),
+  playerState: { currentTime: 40, duration: 5_880 },
+}));
 
 vi.mock("@mux/mux-player-react", async () => {
   const { forwardRef, useImperativeHandle } = await import("react");
-  type MockPlayer = Readonly<{ play: () => Promise<void>; readyState: number }>;
+  type MockPlayer = Readonly<{
+    currentTime: number;
+    duration: number;
+    play: () => Promise<void>;
+    readyState: number;
+  }>;
   type MockProps = Readonly<{
     adTagUrl?: string;
     autoPlay?: boolean;
     children?: ReactNode;
+    onEnded?: () => void;
+    onPause?: () => void;
     onCanPlay?: () => void;
+    onTimeUpdate?: () => void;
     playbackId?: string;
     src?: string | null;
+    startTime?: number;
   }>;
 
   return {
     default: forwardRef<MockPlayer, MockProps>(function MockMuxPlayer(
-      { adTagUrl, autoPlay, children, onCanPlay, playbackId, src },
+      {
+        adTagUrl,
+        autoPlay,
+        children,
+        onCanPlay,
+        onEnded,
+        onPause,
+        onTimeUpdate,
+        playbackId,
+        src,
+        startTime,
+      },
       ref,
     ) {
-      useImperativeHandle(ref, () => ({ play: playMux, readyState: 1 }));
+      useImperativeHandle(ref, () => ({
+        currentTime: playerState.currentTime,
+        duration: playerState.duration,
+        play: playMux,
+        readyState: 1,
+      }));
       return (
         <button
           data-ad-tag-url={adTagUrl}
           data-autoplay={String(autoPlay)}
           data-playback-id={playbackId}
           data-src={src}
+          data-start-time={startTime}
           data-track-count={Children.count(children)}
           data-testid="mux-player"
           type="button"
           onClick={onCanPlay}
+          onDoubleClick={onTimeUpdate}
+          onEnded={onEnded}
+          onMouseDown={onPause}
+          onPause={onPause}
+          onTimeUpdate={onTimeUpdate}
         >
           Test player
         </button>
@@ -41,6 +75,7 @@ vi.mock("@mux/mux-player-react", async () => {
 });
 
 import { ConsentAwareWatchPlayer } from "./consent-aware-watch-player";
+import { writeGuestProgress } from "@/modules/library/ui/guest-progress-store";
 
 const movieId = "00000000-0000-4000-8000-000000000001";
 const successfulPayload = {
@@ -104,6 +139,8 @@ afterEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   playMux.mockClear();
+  playerState.currentTime = 40;
+  playerState.duration = 5_880;
   Reflect.deleteProperty(window, "google");
   document
     .querySelectorAll('script[data-film-google-ima="true"]')
@@ -135,6 +172,73 @@ describe("ConsentAwareWatchPlayer", () => {
 
     fireEvent.click(player);
     await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+  });
+
+  it("uses member server resume and sends throttled plus flush progress to the account API", async () => {
+    const memberPayload = {
+      data: { ...successfulPayload.data, resumeAtSeconds: 913.2 },
+    };
+    const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(
+      async (input) =>
+        input === "/api/v1/playback/sessions"
+          ? jsonResponse(memberPayload, 200)
+          : new Response(null, { status: 204 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    playerState.currentTime = 920;
+
+    render(
+      <ConsentAwareWatchPlayer
+        movieId={movieId}
+        progressMode="member"
+        title="Kıyıdaki Sessizlik"
+      />,
+    );
+
+    const player = await screen.findByTestId("mux-player");
+    expect(player).toHaveAttribute("data-start-time", "913.2");
+    fireEvent.doubleClick(player);
+    fireEvent.mouseDown(player);
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.filter(([input]) => input === `/api/v1/me/progress/${movieId}`),
+      ).toHaveLength(2),
+    );
+    expect(
+      fetchMock.mock.calls.find(
+        ([input, init]) => input === `/api/v1/me/progress/${movieId}` && init?.keepalive === true,
+      ),
+    ).toBeDefined();
+  });
+
+  it("uses only versioned local progress for guests and never calls the member API", async () => {
+    const now = new Date();
+    writeGuestProgress({
+      durationSeconds: 5_880,
+      movieId,
+      now,
+      positionSeconds: 300,
+      storage: localStorage,
+    });
+    const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(
+      async () => jsonResponse(successfulPayload, 200),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    playerState.currentTime = 360;
+
+    render(<ConsentAwareWatchPlayer movieId={movieId} title="Kıyıdaki Sessizlik" />);
+
+    const player = await screen.findByTestId("mux-player");
+    expect(player).toHaveAttribute("data-start-time", "300");
+    fireEvent.mouseDown(player);
+    await waitFor(() =>
+      expect(localStorage.getItem("film-platform:guest-progress:v1")).toContain(
+        '"positionSeconds":360',
+      ),
+    );
+    expect(fetchMock.mock.calls.some(([input]) => input === `/api/v1/me/progress/${movieId}`)).toBe(
+      false,
+    );
   });
 
   it("runs one fixture preroll and hands off without requesting another session", async () => {

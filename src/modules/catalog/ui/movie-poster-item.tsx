@@ -7,9 +7,17 @@ import type { MovieCardView } from "../application/catalog-query-port";
 
 export function MoviePosterItem({
   eager = false,
+  href,
   movie,
+  progressPercent,
   rank,
-}: Readonly<{ eager?: boolean; movie: MovieCardView; rank?: number }>) {
+}: Readonly<{
+  eager?: boolean;
+  href?: string;
+  movie: MovieCardView;
+  progressPercent?: number;
+  rank?: number;
+}>) {
   const initials = movie.title
     .split(" ")
     .slice(0, 2)
@@ -26,7 +34,7 @@ export function MoviePosterItem({
       <Link
         aria-label={rank === undefined ? undefined : `${rank}. sırada ${movie.title}`}
         className="poster-item__link"
-        href={`/film/${movie.slug}`}
+        href={href ?? `/film/${movie.slug}`}
       >
         <div className="poster-item__media">
           {movie.poster === null ? (
@@ -42,6 +50,11 @@ export function MoviePosterItem({
               src={movie.poster.src}
               style={{ objectPosition: movie.poster.focalPosition }}
             />
+          )}
+          {progressPercent === undefined ? null : (
+            <span aria-label={`Yüzde ${progressPercent} izlendi`} className="poster-item__progress">
+              <span style={{ width: `${progressPercent}%` }} />
+            </span>
           )}
         </div>
         <p className="poster-item__title">{movie.title}</p>

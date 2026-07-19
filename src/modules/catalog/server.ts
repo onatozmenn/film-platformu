@@ -7,7 +7,9 @@ import { database } from "@/shared/db/database";
 import { createCatalogQueries } from "./application/catalog-queries";
 import type { CatalogFilters } from "./application/catalog-query-port";
 import { catalogCacheTags } from "./infrastructure/catalog-cache-tags";
+import { catalogCacheInvalidator } from "./infrastructure/next-catalog-cache";
 import { createPrismaCatalogQuery } from "./infrastructure/prisma-catalog-query";
+import { createPrismaCatalogVisibility } from "./infrastructure/prisma-catalog-visibility";
 
 const uncachedQueries = createCatalogQueries(createPrismaCatalogQuery(database));
 
@@ -55,3 +57,6 @@ export const catalogQueries = {
   searchMovies: getCachedSearch,
   suggestMovies: getCachedSuggestions,
 };
+
+export const catalogVisibility = createPrismaCatalogVisibility(database);
+export const catalogInvalidation = catalogCacheInvalidator;

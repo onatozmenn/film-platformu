@@ -13,10 +13,20 @@ export type WatchMovieView = Readonly<{
 }>;
 
 export function WatchScreen({
+  accountHref,
+  accountLabel,
+  memberActions,
   movie,
   player,
   siteName,
-}: Readonly<{ movie: WatchMovieView; player: ReactNode; siteName: string }>) {
+}: Readonly<{
+  accountHref: string;
+  accountLabel: string;
+  memberActions?: ReactNode;
+  movie: WatchMovieView;
+  player: ReactNode;
+  siteName: string;
+}>) {
   return (
     <>
       <a className="skip-link" href="#ana-icerik">
@@ -27,10 +37,15 @@ export function WatchScreen({
           <span className="brand__cue" aria-hidden="true" />
           <span>{siteName}</span>
         </Link>
-        <Link className="watch-back-link" href={`/film/${movie.slug}`}>
-          <ArrowLeft aria-hidden="true" size={18} strokeWidth={2} />
-          Film detayına dön
-        </Link>
+        <nav className="watch-header__actions" aria-label="İzleme menüsü">
+          <Link className="watch-back-link" href={`/film/${movie.slug}`}>
+            <ArrowLeft aria-hidden="true" size={18} strokeWidth={2} />
+            Film detayına dön
+          </Link>
+          <Link className="watch-account-link" href={accountHref}>
+            {accountLabel}
+          </Link>
+        </nav>
       </header>
 
       <main className="watch-page" id="ana-icerik">
@@ -45,6 +60,7 @@ export function WatchScreen({
             <span>{movie.runtimeMinutes} dk.</span>
             {movie.ageRating === null ? null : <span>{movie.ageRating}</span>}
           </p>
+          {memberActions}
           <p className="watch-information__synopsis">{movie.synopsis}</p>
         </section>
       </main>

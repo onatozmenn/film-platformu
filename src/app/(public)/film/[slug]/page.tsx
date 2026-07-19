@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 
 import { MovieDetailScreen, parseMovieSlug } from "@/modules/catalog";
 import { catalogQueries } from "@/modules/catalog/server";
+import { getOptionalMemberSession } from "@/modules/identity/server";
+import { libraryService } from "@/modules/library/server";
+import { MemberLibraryControls } from "@/modules/library/ui/member-library-controls";
 import { playbackService, territoryResolver } from "@/modules/playback/server";
 
 type MoviePageProps = Readonly<{ params: Promise<{ slug: string }> }>;
@@ -33,7 +36,23 @@ export default async function MoviePage({ params }: MoviePageProps) {
   }
 
   const territory = territoryResolver.resolve(await headers());
-  const availability = await playbackService.inspectAvailability(movie.id, territory);
+  const [availability, session] = await Promise.all([
+    playbackService.inspectAvailability(movie.id, territory),
+    getOptionalMemberSession(),
+  ]);
+  const memberState =
+    session === null
+      ? null
+      : await libraryService.getMovieState({
+          actorUserId: session.user.id,
+          movieId: movie.id,
+          ownerUserId: session.user.id,
+        });
 
-  return <MovieDetailScreen movie={{ ...movie, isPlayable: availability.available }} />;
+  return (
+    <MovieDetailScreen
+      memberActions={<MemberLibraryControls initialState={memberState} movieId={movie.id} />}
+      movie={{ ...movie, isPlayable: availability.available }}
+    />
+  );
 }
