@@ -1,7 +1,7 @@
 # Delivery Plan
 
 Status: **Execution source of truth**  
-Active work package: **WP-06 Admin Publication And Audit**
+Active work package: **WP-07 Production Hardening And Launch**
 
 ## Execution Rules
 
@@ -262,7 +262,7 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 - Browser and visual evidence: the complete four-project suite passes with 60 tests and 52 intentional project skips. A desktop administrator repairs the seeded draft, attaches a fake ready asset, sets an internal rights reference, previews through the real detail component, publishes into the public catalog, verifies redacted audit facts, unpublishes, and observes an immediate public 404. A 360px editor smoke proves keyboard navigation, no horizontal overflow, and no serious/critical axe violations. Reviewed [dashboard](../tests/e2e/__screenshots__/chromium-desktop/admin-dashboard.png), [editor](../tests/e2e/__screenshots__/chromium-desktop/admin-editor.png), [preview](../tests/e2e/__screenshots__/chromium-desktop/admin-preview.png), and [audit](../tests/e2e/__screenshots__/chromium-desktop/admin-audit.png) baselines show a dense operational layout without overlap or clipping.
 - Local validation on 2026-07-19: formatting, zero-warning lint, strict typecheck, production build, and four-route gzip budgets pass; 366 unit/component/route/provider/parser tests pass across 79 files with 86.32% statements, 81.85% branches, 83.56% functions, and 86.62% lines. File-scoped 100% gates pass for capability, publication, rating, progress, preroll, and watchability policies. Public JavaScript remains 172.9-174.5 KB gzip and CSS 10.8 KB, below 180/60 KB limits; no admin, provider SDK, credential, rights evidence, or audit-private value enters public client bundles.
 - Security/content impact: privileged reads are uncached and return `404` to unauthorized users; all mutations recheck active database capabilities; direct commands and UI enforce the same matrix; final-admin checks use bounded `SERIALIZABLE` retry; cron transport uses constant-time bearer comparison and rejects cookies, origin, body, query clocks, and insecure production requests. Production rights proof remains owner-managed outside the public database and is linked only by an internal reference. No live TMDB/Mux call, real user, unlicensed asset, production credential, or provider-private value was used.
-- Remote validation: pending the WP-06 implementation commit and exact-SHA GitHub Actions run; WP-07 remains inactive until that evidence passes.
+- Remote validation: GitHub Actions [CI run 29675094141](https://github.com/onatozmenn/film-platformu/actions/runs/29675094141) passed on Node 24 and PostgreSQL 18.3 for exact commit `7817e641f3fe7defa1d1e4d156dd4c329da8f76f`. Frozen install, six migrations, formatting, zero-warning lint, strict typecheck, 366 unit/component/route/provider/parser tests, 49 PostgreSQL tests, database state, production build, four-route asset budgets, and the 60-pass browser suite all passed; failure-evidence upload was correctly skipped. WP-06 is complete and WP-07 is active.
 
 ## WP-07 Production Hardening And Launch
 
@@ -287,7 +287,8 @@ WP-05 and WP-06 may proceed in parallel only after their prerequisites pass and 
 
 ### Evidence
 
-Blocked by WP-04, WP-05, and WP-06.
+- Activated after the accepted WP-04 implementable-scope, WP-05, and WP-06 exact-SHA evidence passed. Repository-controlled hardening evidence is pending.
+- Production advertising/CMP legal approval, SMTP and domain configuration, provider credentials, production rights records, brand/legal/support copy, observability destinations, and owner acceptance remain explicit owner inputs. They will not be fabricated; affected launch gates remain blocked until the owner supplies and validates them.
 
 ## Deferred Backlog
 
