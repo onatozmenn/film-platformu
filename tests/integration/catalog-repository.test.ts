@@ -119,6 +119,7 @@ describe("Prisma catalog query", () => {
     await client.movie.createMany({
       data: temporarySlugs.map((slug, index) => ({
         addedAt: new Date(fixedNow.getTime() + index * 1_000),
+        firstPublishedAt: fixedNow,
         publicationState: "PUBLISHED",
         releaseDate: new Date("2026-01-01T00:00:00.000Z"),
         runtimeMinutes: 90,

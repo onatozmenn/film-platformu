@@ -43,6 +43,9 @@ test("catalog filters are URL-backed, refresh-safe, and expose an empty state", 
 }, testInfo) => {
   const usesFilterSheet = ["chromium-mobile", "chromium-tablet"].includes(testInfo.project.name);
   await page.goto("/filmler");
+  await page.locator(".catalog-grid img").evaluateAll(async (images: HTMLImageElement[]) => {
+    await Promise.all(images.map((image) => image.decode()));
+  });
   if (usesFilterSheet) {
     await page.getByRole("button", { name: "Filtreler" }).click();
     await expect(page).toHaveScreenshot("catalog-filter-sheet.png", { fullPage: true });

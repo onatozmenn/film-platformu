@@ -112,6 +112,7 @@ function deterministicUuid(prefix: string, index: number): string {
 }
 
 async function resetCatalog(client: PrismaClient): Promise<void> {
+  await client.$executeRaw`TRUNCATE TABLE "audit_events"`;
   await client.$transaction([
     client.processedWebhook.deleteMany(),
     client.metadataSource.deleteMany(),
@@ -230,6 +231,7 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
         originalTitle: detail.originalTitle,
         originalTitleSearch:
           detail.originalTitle === null ? null : normalizeCatalogSearchText(detail.originalTitle),
+        firstPublishedAt: new Date("2026-07-01T00:00:00.000Z"),
         publicationState: PublicationState.PUBLISHED,
         releaseDate: new Date(Date.UTC(card.year, 0, 1)),
         runtimeMinutes: detail.runtimeMinutes,
@@ -374,6 +376,11 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
     data: hiddenMovies.map((movie) => ({
       ...movie,
       addedAt: new Date("2026-01-01T00:00:00.000Z"),
+      firstPublishedAt:
+        movie.publicationState === PublicationState.PUBLISHED ||
+        movie.publicationState === PublicationState.UNPUBLISHED
+          ? new Date("2026-01-01T00:00:00.000Z")
+          : null,
       releaseDate: new Date("2026-01-01T00:00:00.000Z"),
       runtimeMinutes: 90,
       synopsis: "Bu kayıt yalnızca yayın görünürlüğü politikasını doğrulayan kurgusal bir filmdir.",
@@ -418,6 +425,7 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
     data: {
       allowStreaming: true,
       endsAt: new Date("2035-01-01T00:00:00.000Z"),
+      evidenceReference: "fixture-license:kiyidaki-sessizlik-tr",
       id: "41000000-0000-4000-8000-000000000001",
       movieId: "00000000-0000-4000-8000-000000000001",
       startsAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -441,6 +449,7 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
     data: {
       allowStreaming: true,
       endsAt: new Date("2021-01-01T00:00:00.000Z"),
+      evidenceReference: "fixture-license:expired-rights-tr",
       id: "41000000-0000-4000-8000-000000000002",
       movieId: "00000000-0000-4000-8000-000000000006",
       startsAt: new Date("2020-01-01T00:00:00.000Z"),
@@ -464,6 +473,7 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
     data: {
       allowStreaming: true,
       endsAt: new Date("2035-01-01T00:00:00.000Z"),
+      evidenceReference: "fixture-license:provider-error-tr",
       id: "41000000-0000-4000-8000-000000000003",
       movieId: "00000000-0000-4000-8000-000000000002",
       startsAt: new Date("2026-01-01T00:00:00.000Z"),

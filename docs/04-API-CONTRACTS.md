@@ -235,14 +235,20 @@ Admin UI uses typed application commands rather than a broad CRUD API:
 | Command                    | Minimum role | Important precondition                          |
 | -------------------------- | ------------ | ----------------------------------------------- |
 | `CreateMovieDraft`         | Editor       | Valid owned or allowed imported metadata        |
+| `ImportMovieDraft`         | Editor       | Numeric TMDB ID and complete allowed metadata   |
 | `UpdateMovieEditorialData` | Editor       | Optimistic revision matches                     |
 | `SetMovieCredits`          | Editor       | People and ordering validate                    |
+| `UpsertCollection`         | Editor       | Optimistic revision and unique positions match  |
+| `SetSubtitleTracks`        | Editor       | BCP 47 metadata and default-track policy pass   |
 | `CreateOrAttachVideoAsset` | Admin        | Provider request is idempotent                  |
+| `ReconcileVideoAsset`      | Admin        | Owned transition cannot regress terminal state  |
 | `SetContentRights`         | Admin        | Valid, non-contradictory time window            |
 | `ScheduleMovie`            | Editor       | Completeness and future schedule pass           |
 | `PublishMovie`             | Editor       | Full publication and watchability policy passes |
 | `UnpublishMovie`           | Editor       | Reason supplied for audit                       |
+| `ReturnMovieToDraft`       | Editor       | State is `SCHEDULED` or `UNPUBLISHED`            |
 | `GrantRole` / `RevokeRole` | Admin        | Cannot remove the final active admin            |
+| `DisableAccount`           | Admin        | Cannot disable the final active admin            |
 
 Every command returns:
 

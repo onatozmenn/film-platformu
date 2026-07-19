@@ -32,4 +32,18 @@ describe("catalog cache invalidator", () => {
       ["catalog:movie:kiyidaki-sessizlik", "max"],
     ]);
   });
+
+  it("uses immediate expiry for committed editorial withdrawal", () => {
+    catalogCacheInvalidator.invalidate({
+      expireImmediately: true,
+      movieSlugs: ["kiyidaki-sessizlik"],
+      searchChanged: true,
+    });
+
+    expect(revalidateTag.mock.calls).toEqual([
+      ["catalog", { expire: 0 }],
+      ["catalog:search", { expire: 0 }],
+      ["catalog:movie:kiyidaki-sessizlik", { expire: 0 }],
+    ]);
+  });
 });

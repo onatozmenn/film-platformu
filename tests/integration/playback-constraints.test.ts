@@ -97,7 +97,14 @@ describe("playback database constraints", () => {
     const startsAt = new Date("2026-07-01T00:00:00.000Z");
     const endsAt = new Date("2026-08-01T00:00:00.000Z");
     const first = await client.contentRight.create({
-      data: { allowStreaming: true, endsAt, movieId: movie.id, startsAt, territory: "TR" },
+      data: {
+        allowStreaming: true,
+        endsAt,
+        evidenceReference: "fixture-license:first-right",
+        movieId: movie.id,
+        startsAt,
+        territory: "TR",
+      },
     });
 
     try {
@@ -106,6 +113,7 @@ describe("playback database constraints", () => {
           data: {
             allowStreaming: false,
             endsAt: new Date("2026-07-20T00:00:00.000Z"),
+            evidenceReference: "fixture-license:contradictory-right",
             movieId: movie.id,
             startsAt: new Date("2026-07-10T00:00:00.000Z"),
             territory: "TR",
@@ -117,6 +125,7 @@ describe("playback database constraints", () => {
           data: {
             allowStreaming: true,
             endsAt: startsAt,
+            evidenceReference: "fixture-license:invalid-window",
             movieId: movie.id,
             startsAt: endsAt,
             territory: "TR",
@@ -128,6 +137,7 @@ describe("playback database constraints", () => {
         data: {
           allowStreaming: true,
           endsAt: new Date("2026-07-20T00:00:00.000Z"),
+          evidenceReference: "fixture-license:overlapping-allow",
           movieId: movie.id,
           startsAt: new Date("2026-07-10T00:00:00.000Z"),
           territory: "TR",

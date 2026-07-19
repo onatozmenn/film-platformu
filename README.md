@@ -57,6 +57,7 @@ Available discovery routes:
 - `/izle/[slug]` requests a private, territory-checked playback session and renders the route-isolated Mux Player experience.
 - `/giris` starts the account-enumeration-safe email-link flow when an identity provider is configured.
 - `/hesap` shows the signed-in member's watchlist, continue-watching history, session controls, and irreversible account-deletion command.
+- `/yonetim` provides the private editor/admin publication queue, optimistic editorial forms, collections, provider asset reconciliation, subtitle metadata, rights, preview, role management, and redacted audit views.
 
 WP-03 exposes an `/izle` action only when fresh publication, trusted-territory rights, and active-ready asset policy passes. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md); owned playback fixture provenance is recorded in [`public/fixtures/playback/ATTRIBUTION.md`](public/fixtures/playback/ATTRIBUTION.md).
 
@@ -83,7 +84,7 @@ pnpm check:budgets
 
 `pnpm check:budgets` requires an existing production build plus Chromium and starts an isolated production server to enforce the public-route gzip targets.
 
-TMDB metadata support is disabled by default and its synthetic contract tests make no live request. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. Advertising defaults to disabled; browser tests opt into a deterministic fake and a Google-owned sample tag without making an ad-provider request. Identity and internal retention jobs also default to disabled; their deterministic test adapters require no production credential. No Mux, TMDB, email, advertising, or production credential is required for local discovery and playback tests.
+TMDB metadata support is disabled by default and its synthetic contract tests make no live request. When explicitly enabled, editors import by numeric TMDB ID; provider imagery is not persisted as licensed catalog art. Guest playback defaults to an owned local fake outside production; production fake grants fail closed unless the complete Mux configuration is selected. Advertising defaults to disabled; browser tests opt into a deterministic fake and a Google-owned sample tag without making an ad-provider request. Identity and internal jobs also default to disabled; deterministic test adapters require no production credential. No Mux, TMDB, email, advertising, or production credential is required for local tests.
 
 ## Content Boundary
 

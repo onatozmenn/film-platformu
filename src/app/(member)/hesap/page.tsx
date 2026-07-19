@@ -1,5 +1,6 @@
-import { ShieldCheck } from "lucide-react";
+import { Settings, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getOptionalMemberSession } from "@/modules/identity/server";
@@ -29,6 +30,12 @@ export default async function AccountPage() {
         <p className="eyebrow">Üye hesabı</p>
         <h1>{session.user.displayName}</h1>
         <p>Listeniz, puanlarınız ve izleme ilerlemeniz bu hesapta saklanır.</p>
+        {session.user.roles.includes("EDITOR") || session.user.roles.includes("ADMIN") ? (
+          <Link className="secondary-action account-admin-link" href="/yonetim">
+            <Settings aria-hidden="true" size={17} strokeWidth={2} />
+            Yönetimi aç
+          </Link>
+        ) : null}
       </header>
       <AccountLibrary library={library} />
       <section className="account-band" aria-labelledby="account-status-title">

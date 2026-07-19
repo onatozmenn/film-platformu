@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@/generated/prisma/client";
+import { hasDatabaseErrorCode } from "@/shared/db/database-error";
 
 import type {
   AccountDeletionWriteResult,
@@ -8,10 +9,6 @@ import type {
 import { accountDeletionWindowMilliseconds } from "../domain/account-deletion-policy";
 
 const maximumSerializationAttempts = 3;
-
-function hasErrorCode(error: unknown, code: string): boolean {
-  return typeof error === "object" && error !== null && "code" in error && error.code === code;
-}
 
 export function createPrismaAccountLifecycleRepository(
   client: PrismaClient,
@@ -71,7 +68,10 @@ export function createPrismaAccountLifecycleRepository(
             { isolationLevel: "Serializable", maxWait: 2_000, timeout: 5_000 },
           );
         } catch (error) {
-          if (attempt < maximumSerializationAttempts && hasErrorCode(error, "P2034")) {
+          if (
+            attempt < maximumSerializationAttempts &&
+            hasDatabaseErrorCode(error, "P2034", "40001")
+          ) {
             continue;
           }
           throw error;

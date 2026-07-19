@@ -14,6 +14,12 @@ enum PublicationState {
   UNPUBLISHED
 }
 
+enum PublicationFailureCode {
+  CONTENT_INCOMPLETE
+  RIGHTS_UNAVAILABLE
+  ASSET_UNAVAILABLE
+}
+
 enum CreditKind {
   DIRECTOR
   WRITER
@@ -53,32 +59,41 @@ enum UserRoleName {
   ADMIN
 }
 
+enum AuditActorType {
+  USER
+  SYSTEM
+}
+
 model Movie {
-  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug                  String            @unique(map: "movies_slug_key") @db.VarChar(96)
-  title                 String            @db.VarChar(160)
-  titleSearch           String            @map("title_search") @db.VarChar(160)
-  originalTitle         String?           @map("original_title") @db.VarChar(160)
-  originalTitleSearch   String?           @map("original_title_search") @db.VarChar(160)
-  synopsis              String            @db.Text
-  releaseDate           DateTime          @map("release_date") @db.Date
-  runtimeMinutes        Int               @map("runtime_minutes")
-  ageRating             String?           @map("age_rating") @db.VarChar(32)
-  posterSrc             String?           @map("poster_src") @db.Text
-  posterAlt             String?           @map("poster_alt") @db.VarChar(240)
-  posterWidth           Int?              @map("poster_width")
-  posterHeight          Int?              @map("poster_height")
-  posterFocalPosition   String?           @map("poster_focal_position") @db.VarChar(32)
-  backdropSrc           String?           @map("backdrop_src") @db.Text
-  backdropAlt           String?           @map("backdrop_alt") @db.VarChar(240)
-  backdropWidth         Int?              @map("backdrop_width")
-  backdropHeight        Int?              @map("backdrop_height")
-  backdropFocalPosition String?           @map("backdrop_focal_position") @db.VarChar(32)
-  publicationState      PublicationState  @default(DRAFT) @map("publication_state")
-  publishAt             DateTime?         @map("publish_at") @db.Timestamptz(3)
-  addedAt               DateTime          @default(now()) @map("added_at") @db.Timestamptz(3)
-  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt             DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                  String                  @unique(map: "movies_slug_key") @db.VarChar(96)
+  title                 String                  @db.VarChar(160)
+  titleSearch           String                  @map("title_search") @db.VarChar(160)
+  originalTitle         String?                 @map("original_title") @db.VarChar(160)
+  originalTitleSearch   String?                 @map("original_title_search") @db.VarChar(160)
+  synopsis              String                  @db.Text
+  releaseDate           DateTime                @map("release_date") @db.Date
+  runtimeMinutes        Int                     @map("runtime_minutes")
+  ageRating             String?                 @map("age_rating") @db.VarChar(32)
+  posterSrc             String?                 @map("poster_src") @db.Text
+  posterAlt             String?                 @map("poster_alt") @db.VarChar(240)
+  posterWidth           Int?                    @map("poster_width")
+  posterHeight          Int?                    @map("poster_height")
+  posterFocalPosition   String?                 @map("poster_focal_position") @db.VarChar(32)
+  backdropSrc           String?                 @map("backdrop_src") @db.Text
+  backdropAlt           String?                 @map("backdrop_alt") @db.VarChar(240)
+  backdropWidth         Int?                    @map("backdrop_width")
+  backdropHeight        Int?                    @map("backdrop_height")
+  backdropFocalPosition String?                 @map("backdrop_focal_position") @db.VarChar(32)
+  publicationState      PublicationState        @default(DRAFT) @map("publication_state")
+  publishAt             DateTime?               @map("publish_at") @db.Timestamptz(3)
+  revision              Int                     @default(1)
+  firstPublishedAt      DateTime?               @map("first_published_at") @db.Timestamptz(3)
+  lastPublishFailure    PublicationFailureCode? @map("last_publish_failure")
+  lastPublishAttemptAt  DateTime?               @map("last_publish_attempt_at") @db.Timestamptz(3)
+  addedAt               DateTime                @default(now()) @map("added_at") @db.Timestamptz(3)
+  createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
   genres                MovieGenre[]
   credits               Credit[]
   collections           CollectionMovie[]
@@ -157,6 +172,7 @@ model Collection {
   description  String?           @db.Text
   state        CollectionState   @default(DRAFT)
   displayOrder Int               @default(0) @map("display_order")
+  revision     Int               @default(1)
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
   movies       CollectionMovie[]
@@ -233,15 +249,16 @@ model SubtitleTrack {
 }
 
 model ContentRight {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  movieId        String   @map("movie_id") @db.Uuid
-  territory      String   @db.Char(2)
-  startsAt       DateTime @map("starts_at") @db.Timestamptz(3)
-  endsAt         DateTime @map("ends_at") @db.Timestamptz(3)
-  allowStreaming Boolean  @map("allow_streaming")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
-  movie          Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  movieId           String   @map("movie_id") @db.Uuid
+  territory         String   @db.Char(2)
+  startsAt          DateTime @map("starts_at") @db.Timestamptz(3)
+  endsAt            DateTime @map("ends_at") @db.Timestamptz(3)
+  allowStreaming    Boolean  @map("allow_streaming")
+  evidenceReference String?  @map("evidence_reference") @db.VarChar(160)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  movie             Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@index([movieId, territory, startsAt, endsAt], map: "content_rights_movie_territory_window_idx")
   @@map("content_rights")
@@ -271,6 +288,7 @@ model User {
   profile       UserProfile?
   roles         UserRole[]       @relation("RoleSubject")
   grantedRoles  UserRole[]       @relation("RoleGrantor")
+  auditEvents   AuditEvent[]     @relation("AuditActor")
   watchlist     WatchlistEntry[]
   ratings       Rating[]
   progress      WatchProgress[]
@@ -402,4 +420,22 @@ model WatchProgress {
   @@index([userId, lastWatchedAt(sort: Desc)], map: "watch_progress_user_id_last_watched_at_idx")
   @@index([movieId], map: "watch_progress_movie_id_idx")
   @@map("watch_progress")
+}
+
+model AuditEvent {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorType   AuditActorType @map("actor_type")
+  actorUserId String?        @map("actor_user_id") @db.Uuid
+  action      String         @db.VarChar(80)
+  targetType  String         @map("target_type") @db.VarChar(40)
+  targetId    String         @map("target_id") @db.Uuid
+  requestId   String         @map("request_id") @db.VarChar(128)
+  metadata    Json           @default("{}") @db.JsonB
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  actor       User?          @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId, createdAt(sort: Desc)], map: "audit_events_target_created_at_idx")
+  @@index([actorUserId, createdAt(sort: Desc)], map: "audit_events_actor_created_at_idx")
+  @@index([createdAt], map: "audit_events_created_at_idx")
+  @@map("audit_events")
 }

@@ -10,6 +10,7 @@ export type InternalJobsEnvironment =
       cronSecret: string;
       kind: "enabled";
       nodeEnvironment: "development" | "production" | "test";
+      publicationBatchLimit: number;
     }>;
 
 const schema = z
@@ -19,6 +20,7 @@ const schema = z
       z.string().trim().min(32).max(256).optional(),
     ),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    PUBLISH_BATCH_LIMIT: z.coerce.number().int().min(1).max(100).default(25),
     RETENTION_BATCH_LIMIT: z.coerce.number().int().min(1).max(500).default(100),
   })
   .strict();
@@ -26,6 +28,7 @@ const schema = z
 export function parseInternalJobsEnvironment(source: {
   CRON_SECRET?: string | undefined;
   NODE_ENV?: string | undefined;
+  PUBLISH_BATCH_LIMIT?: string | undefined;
   RETENTION_BATCH_LIMIT?: string | undefined;
 }): InternalJobsEnvironment {
   const parsed = schema.parse(source);
@@ -36,5 +39,6 @@ export function parseInternalJobsEnvironment(source: {
         cronSecret: parsed.CRON_SECRET,
         kind: "enabled",
         nodeEnvironment: parsed.NODE_ENV,
+        publicationBatchLimit: parsed.PUBLISH_BATCH_LIMIT,
       };
 }

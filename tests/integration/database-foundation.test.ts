@@ -46,6 +46,7 @@ describe("database foundation", () => {
     expect(tables.map(({ tableName }) => tableName)).toEqual([
       "account_deletion_requests",
       "accounts",
+      "audit_events",
       "collection_movies",
       "collections",
       "content_rights",

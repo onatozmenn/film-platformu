@@ -2,11 +2,13 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 
+import { getServerEnvironment } from "@/shared/config/server-environment";
 import { database } from "@/shared/db/database";
 
 import { createCatalogQueries } from "./application/catalog-queries";
 import type { CatalogFilters } from "./application/catalog-query-port";
 import { catalogCacheTags } from "./infrastructure/catalog-cache-tags";
+import { createMetadataProvider } from "./infrastructure/metadata-provider-factory";
 import { catalogCacheInvalidator } from "./infrastructure/next-catalog-cache";
 import { createPrismaCatalogQuery } from "./infrastructure/prisma-catalog-query";
 import { createPrismaCatalogVisibility } from "./infrastructure/prisma-catalog-visibility";
@@ -60,3 +62,4 @@ export const catalogQueries = {
 
 export const catalogVisibility = createPrismaCatalogVisibility(database);
 export const catalogInvalidation = catalogCacheInvalidator;
+export const metadataProvider = createMetadataProvider(getServerEnvironment().metadataProvider);

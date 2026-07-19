@@ -30,12 +30,12 @@ Every active account has the effective `MEMBER` capability; privileged roles are
 
 | Record | Required fields and constraints |
 |---|---|
-| `Movie` | `id`, unique normalized `slug`, `title`, nullable `originalTitle`, `synopsis`, `releaseDate`, `runtimeMinutes > 0`, nullable `ageRating`, poster/backdrop references, `publicationState`, nullable `publishAt`, timestamps |
+| `Movie` | `id`, unique normalized `slug`, positive optimistic `revision`, nullable `firstPublishedAt`, title/editorial fields, poster/backdrop references, `publicationState`, nullable `publishAt`, paired nullable scheduled-attempt failure code/time, timestamps |
 | `Genre` | `id`, unique `slug`, unique Turkish `name` |
 | `MovieGenre` | composite PK `(movieId, genreId)` |
 | `Person` | `id`, `name`, nullable provider identity and profile image reference |
 | `Credit` | `id`, `movieId`, `personId`, `kind`, nullable `characterName`, `billingOrder >= 0`; unique natural combination per film |
-| `Collection` | `id`, unique `slug`, `title`, nullable `description`, `state`, display metadata |
+| `Collection` | `id`, unique `slug`, positive optimistic `revision`, `title`, nullable `description`, `state`, display metadata |
 | `CollectionMovie` | composite unique `(collectionId, movieId)`, unique `(collectionId, position)` |
 | `MetadataSource` | `movieId`, provider enum, external ID, last import time; unique `(provider, externalId)` |
 
@@ -47,7 +47,7 @@ Every active account has the effective `MEMBER` capability; privileged roles are
 |---|---|
 | `VideoAsset` | `id`, `movieId`, provider, unique provider asset ID, provider playback ID, owned `state`, duration, optional resolution metadata, timestamps |
 | `SubtitleTrack` | `id`, `videoAssetId`, BCP 47 `languageTag`, label, `kind`, provider track ID, `isDefault`; unique `(videoAssetId, languageTag, kind)` |
-| `ContentRight` | `id`, `movieId`, ISO 3166-1 alpha-2 territory, `startsAt`, `endsAt`, `allowStreaming`; no overlapping contradictory windows for the same movie and territory |
+| `ContentRight` | `id`, `movieId`, ISO 3166-1 alpha-2 territory, `startsAt`, `endsAt`, `allowStreaming`, nullable internal `evidenceReference`; no overlapping contradictory windows for the same movie and territory |
 | `ProcessedWebhook` | unique provider event ID, event type, processed timestamp; retained for idempotency |
 
 `SubtitleTrack.kind` is `SUBTITLES`, `CAPTIONS`, or `FORCED`. Subtitles translate dialogue, captions include relevant sound information, and forced tracks translate only essential foreign-language/on-screen text. Tracks are optional for publication. At most one track per video asset is default; the player lists all tracks using their owned label and does not silently substitute one kind for another.
@@ -72,7 +72,7 @@ The public rating value is `valueHalfStars / 2`. Store the integer to avoid floa
 |---|---|
 | `AuditEvent` | `id`, `actorType` (`USER` or `SYSTEM`), nullable actor user ID, action enum/string, target type and ID, request ID, redacted JSON metadata, immutable `createdAt` |
 
-Audit rows are append-only at the application layer. A scheduled command records `SYSTEM`; a user action requires its actor ID. Application credentials, tokens, complete webhook payloads, signed URLs, email addresses, display names, and synopsis/body copies do not belong in audit metadata. Account purge may set the nullable actor FK to null through the retention path while preserving the event and its non-personal target/action facts.
+Audit rows are append-only at the application and database layers. A trigger rejects updates and deletes except the foreign-key-driven transition of an existing actor user ID to `NULL` during account purge. A scheduled command records `SYSTEM`; a user action requires its actor ID. Application credentials, tokens, complete webhook payloads, signed URLs, email addresses, display names, synopsis/body copies, provider asset IDs, and rights evidence references do not belong in audit metadata.
 
 ## Core Invariants
 
@@ -149,6 +149,7 @@ The catalog may display a published but temporarily unplayable film only when pr
 - partial unique index enforcing at most one default subtitle track per video asset;
 - indexes on `WatchProgress(userId, lastWatchedAt DESC)` and `WatchlistEntry(userId, createdAt DESC)`;
 - index on `AuditEvent(targetType, targetId, createdAt DESC)`;
+- indexes on `AuditEvent(actorUserId, createdAt DESC)` and `AuditEvent(createdAt)`;
 - unique index on `ProcessedWebhook(providerEventId)`.
 
 If Prisma cannot express a required PostgreSQL constraint, add it with reviewed SQL in the migration and cover it with an integration test.
@@ -156,6 +157,8 @@ If Prisma cannot express a required PostgreSQL constraint, add it with reviewed 
 ## Transaction Boundaries
 
 - Publishing validates completeness and changes state in one transaction.
+- Optimistic editorial, credit, and collection writes require the current positive revision and increment it atomically.
+- Scheduled publication records only an owned failure code/time, remains scheduled, and retries after a later server-clock instant.
 - Selecting a new active asset disables the former active designation atomically.
 - Rights changes and their audit event commit atomically.
 - Role changes and their audit event commit atomically.

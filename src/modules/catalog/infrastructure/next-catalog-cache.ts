@@ -7,19 +7,20 @@ import { catalogCacheTags } from "./catalog-cache-tags";
 
 export const catalogCacheInvalidator: CatalogCacheInvalidator = {
   invalidate(input) {
-    revalidateTag(catalogCacheTags.all, "max");
+    const profile = input.expireImmediately === true ? { expire: 0 } : "max";
+    revalidateTag(catalogCacheTags.all, profile);
 
     if (input.collectionChanged === true) {
-      revalidateTag(catalogCacheTags.collections, "max");
+      revalidateTag(catalogCacheTags.collections, profile);
     }
     if (input.searchChanged === true) {
-      revalidateTag(catalogCacheTags.search, "max");
+      revalidateTag(catalogCacheTags.search, profile);
     }
     for (const movieId of input.movieIds ?? []) {
-      revalidateTag(catalogCacheTags.movie(movieId), "max");
+      revalidateTag(catalogCacheTags.movie(movieId), profile);
     }
     for (const slug of input.movieSlugs ?? []) {
-      revalidateTag(catalogCacheTags.movie(slug), "max");
+      revalidateTag(catalogCacheTags.movie(slug), profile);
     }
   },
 };

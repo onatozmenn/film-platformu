@@ -19,6 +19,8 @@ export default defineConfig({
       reporter: ["text", "html"],
       thresholds: {
         "src/modules/advertising/domain/preroll-policy.ts": { 100: true },
+        "src/modules/admin/domain/capability-policy.ts": { 100: true },
+        "src/modules/admin/domain/publication-policy.ts": { 100: true },
         "src/modules/library/domain/progress-policy.ts": { 100: true },
         "src/modules/library/domain/rating-policy.ts": { 100: true },
         "src/modules/playback/domain/watchability.ts": { 100: true },

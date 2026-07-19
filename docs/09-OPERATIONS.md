@@ -55,6 +55,7 @@ Maintain the exact variable names and requirement matrix in `.env.example` and t
 | `AUTH_EMAIL_FROM`, `AUTH_SMTP_URL` | Server | Sender is required for enabled identity; SMTP URL is required only for `smtp` and must use `smtp:` or `smtps:`. |
 | `NEXTAUTH_URL` | Server | Canonical Auth.js callback origin; set to the same trusted origin as `SITE_ORIGIN` for each deployment. |
 | `CRON_SECRET` | Server secret | Dedicated 32+ character bearer credential for internal scheduled commands. Absence disables the transport. |
+| `PUBLISH_BATCH_LIMIT` | Server | Integer `1..100`, defaults to `25`, and bounds one scheduled-publication invocation. |
 | `RETENTION_BATCH_LIMIT` | Server | Integer `1..500`, defaults to `100`, and bounds one retention invocation. |
 
 Provider-specific variables are added to this matrix by their owning work package. Presence alone never enables an integration.

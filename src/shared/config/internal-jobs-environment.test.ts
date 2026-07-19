@@ -12,6 +12,7 @@ describe("internal jobs environment", () => {
       parseInternalJobsEnvironment({
         CRON_SECRET: "c".repeat(32),
         NODE_ENV: "production",
+        PUBLISH_BATCH_LIMIT: "10",
         RETENTION_BATCH_LIMIT: "25",
       }),
     ).toEqual({
@@ -19,6 +20,7 @@ describe("internal jobs environment", () => {
       cronSecret: "c".repeat(32),
       kind: "enabled",
       nodeEnvironment: "production",
+      publicationBatchLimit: 10,
     });
   });
 
@@ -26,6 +28,8 @@ describe("internal jobs environment", () => {
     { CRON_SECRET: "short" },
     { CRON_SECRET: "c".repeat(32), RETENTION_BATCH_LIMIT: "0" },
     { CRON_SECRET: "c".repeat(32), RETENTION_BATCH_LIMIT: "501" },
+    { CRON_SECRET: "c".repeat(32), PUBLISH_BATCH_LIMIT: "0" },
+    { CRON_SECRET: "c".repeat(32), PUBLISH_BATCH_LIMIT: "101" },
   ])("rejects unsafe internal-job configuration %#", (source) => {
     expect(() => parseInternalJobsEnvironment(source)).toThrow();
   });
