@@ -62,6 +62,26 @@ describe("Prisma playback repository", () => {
     ).toMatchObject({ allowed: true });
   });
 
+  it("keeps the openly licensed film unavailable until a real asset is attached", async () => {
+    const candidate = await candidateForSlug("big-buck-bunny");
+    const right = await client.contentRight.findFirstOrThrow({
+      where: { movie: { slug: "big-buck-bunny" }, territory: "TR" },
+    });
+
+    expect(right.evidenceReference).toBe("cc-by-3.0:https://peach.blender.org/about/");
+    expect(candidate.assets).toEqual([]);
+    expect(
+      evaluateWatchability({
+        assets: candidate.assets,
+        now: fixedNow,
+        publicationState: candidate.publicationState,
+        publishAt: candidate.publishAt,
+        rights: candidate.rights,
+        territory: "TR",
+      }),
+    ).toEqual({ allowed: false, reason: "ASSET_UNAVAILABLE" });
+  });
+
   it("maps expired rights and draft preparation into distinct policy denials", async () => {
     const expired = await candidateForSlug("gece-vardiyasi");
     const draft = await candidateForSlug("kurgu-masasinda");

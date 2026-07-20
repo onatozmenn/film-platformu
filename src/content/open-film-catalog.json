@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "films": [
+    {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "slug": "big-buck-bunny",
+      "title": "Big Buck Bunny",
+      "originalTitle": null,
+      "synopsis": "Ormandaki küçük hayvanların sataşmalarından yorulan sakin bir tavşan, zekâsını kullanarak onlara unutamayacakları bir karşılık verir.",
+      "releaseDate": "2008-05-30",
+      "runtimeMinutes": 10,
+      "ageRating": null,
+      "genres": [
+        { "name": "Komedi", "slug": "komedi" },
+        { "name": "Macera", "slug": "macera" }
+      ],
+      "credits": [
+        {
+          "billingOrder": 0,
+          "displayLabel": null,
+          "kind": "DIRECTOR",
+          "name": "Sacha Goedegebure"
+        },
+        {
+          "billingOrder": 0,
+          "displayLabel": "Yapım",
+          "kind": "OTHER",
+          "name": "Blender Foundation"
+        }
+      ],
+      "artwork": {
+        "backdrop": {
+          "alt": "Çayırda duran Big Buck Bunny ve orman hayvanları",
+          "focalPosition": "50% 48%",
+          "height": 1080,
+          "sha256": "E6378FC0368CB38D4EC6554117CE9FDA1AD5D71F4CB7ED5A7E242F329AA8BFCE",
+          "sourceUrl": "https://peach.blender.org/wp-content/uploads/bbb-splash.png",
+          "src": "/fixtures/catalog/big-buck-bunny-backdrop.png",
+          "width": 1920
+        },
+        "poster": {
+          "alt": "Çayırda duran Big Buck Bunny ve orman hayvanları",
+          "focalPosition": "50% 48%",
+          "height": 1080,
+          "sha256": "E6378FC0368CB38D4EC6554117CE9FDA1AD5D71F4CB7ED5A7E242F329AA8BFCE",
+          "sourceUrl": "https://peach.blender.org/wp-content/uploads/bbb-splash.png",
+          "src": "/fixtures/catalog/big-buck-bunny-backdrop.png",
+          "width": 1920
+        }
+      },
+      "license": {
+        "copyrightNotice": "(c) copyright 2008, Blender Foundation / www.bigbuckbunny.org",
+        "creator": "Blender Foundation",
+        "evidenceReference": "cc-by-3.0:https://peach.blender.org/about/",
+        "id": "CC-BY-3.0",
+        "label": "Creative Commons Attribution 3.0",
+        "notice": "Film değiştirilmeden sunulur ve özgün jeneriği korunur.",
+        "projectUrl": "https://peach.blender.org/",
+        "url": "https://creativecommons.org/licenses/by/3.0/"
+      },
+      "rights": {
+        "endsAt": "2100-01-01T00:00:00.000Z",
+        "startsAt": "2008-05-30T00:00:00.000Z",
+        "territories": ["TR"]
+      },
+      "video": {
+        "sourceRecordUrl": "https://peach.blender.org/download/",
+        "sourceUrl": "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4",
+        "videoQuality": "basic"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "slug": "sintel",
+      "title": "Sintel",
+      "originalTitle": null,
+      "synopsis": "Sintel adlı genç bir kadın, kendisinden koparılan yavru ejderhayı bulmak için karlı dağlardan kadim bir şehre uzanan tehlikeli bir yolculuğa çıkar.",
+      "releaseDate": "2010-09-27",
+      "runtimeMinutes": 15,
+      "ageRating": null,
+      "genres": [
+        { "name": "Animasyon", "slug": "animasyon" },
+        { "name": "Dram", "slug": "dram" },
+        { "name": "Fantastik", "slug": "fantastik" }
+      ],
+      "credits": [
+        {
+          "billingOrder": 0,
+          "displayLabel": null,
+          "kind": "DIRECTOR",
+          "name": "Colin Levy"
+        },
+        {
+          "billingOrder": 0,
+          "displayLabel": "Yapımcı",
+          "kind": "OTHER",
+          "name": "Ton Roosendaal"
+        }
+      ],
+      "artwork": {
+        "backdrop": {
+          "alt": "Sintel filmindeki sisli ve karlı dağ geçidi",
+          "focalPosition": "50% 50%",
+          "height": 872,
+          "sha256": "09BE828D82F07AC1A30ECBA80AE603AA41B68BAF57B98737FF970810FEAE55F2",
+          "sourceUrl": "https://durian.blender.org/wp-content/uploads/2010/06/01a_comp_000197.jpg",
+          "src": "/open-films/sintel.jpg",
+          "width": 2048
+        },
+        "poster": {
+          "alt": "Sintel filmindeki sisli ve karlı dağ geçidi",
+          "focalPosition": "50% 50%",
+          "height": 872,
+          "sha256": "09BE828D82F07AC1A30ECBA80AE603AA41B68BAF57B98737FF970810FEAE55F2",
+          "sourceUrl": "https://durian.blender.org/wp-content/uploads/2010/06/01a_comp_000197.jpg",
+          "src": "/open-films/sintel.jpg",
+          "width": 2048
+        }
+      },
+      "license": {
+        "copyrightNotice": "(c) copyright Blender Foundation / www.sintel.org",
+        "creator": "Blender Foundation",
+        "evidenceReference": "cc-by-3.0:https://durian.blender.org/sharing/",
+        "id": "CC-BY-3.0",
+        "label": "Creative Commons Attribution 3.0",
+        "notice": "Film değiştirilmeden sunulur ve özgün jeneriği korunur.",
+        "projectUrl": "https://durian.blender.org/",
+        "url": "https://creativecommons.org/licenses/by/3.0/"
+      },
+      "rights": {
+        "endsAt": "2100-01-01T00:00:00.000Z",
+        "startsAt": "2010-09-27T00:00:00.000Z",
+        "territories": ["TR"]
+      },
+      "video": {
+        "sourceRecordUrl": "https://durian.blender.org/download/",
+        "sourceUrl": "https://download.blender.org/demo/movies/Sintel.2010.720p.mkv",
+        "videoQuality": "basic"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000013",
+      "slug": "tears-of-steel",
+      "title": "Tears of Steel",
+      "originalTitle": null,
+      "synopsis": "Amsterdam'da savaşçılar ve bilim insanları, robot kıyametini durdurmak için geçmişteki iki insanın kritik karşılaşmasını yeniden canlandırmaya çalışır.",
+      "releaseDate": "2012-09-26",
+      "runtimeMinutes": 12,
+      "ageRating": null,
+      "genres": [
+        { "name": "Aksiyon", "slug": "aksiyon" },
+        { "name": "Bilim kurgu", "slug": "bilim-kurgu" },
+        { "name": "Dram", "slug": "dram" }
+      ],
+      "credits": [
+        {
+          "billingOrder": 0,
+          "displayLabel": null,
+          "kind": "DIRECTOR",
+          "name": "Ian Hubert"
+        },
+        {
+          "billingOrder": 0,
+          "displayLabel": "Yapımcı",
+          "kind": "OTHER",
+          "name": "Ton Roosendaal"
+        }
+      ],
+      "artwork": {
+        "backdrop": {
+          "alt": "Tears of Steel filmindeki ışıklı bilim kurgu kubbesi",
+          "focalPosition": "50% 50%",
+          "height": 803,
+          "sha256": "5BA372C8B9E63C4BFF55A1873F6E5A7D5AC7083AEE2E3B26D80C1437B59FE165",
+          "sourceUrl": "https://mango.blender.org/wp-content/gallery/4k-renders/02_dome.jpg",
+          "src": "/open-films/tears-of-steel.jpg",
+          "width": 1920
+        },
+        "poster": {
+          "alt": "Tears of Steel filmindeki ışıklı bilim kurgu kubbesi",
+          "focalPosition": "50% 50%",
+          "height": 803,
+          "sha256": "5BA372C8B9E63C4BFF55A1873F6E5A7D5AC7083AEE2E3B26D80C1437B59FE165",
+          "sourceUrl": "https://mango.blender.org/wp-content/gallery/4k-renders/02_dome.jpg",
+          "src": "/open-films/tears-of-steel.jpg",
+          "width": 1920
+        }
+      },
+      "license": {
+        "copyrightNotice": "(CC) Blender Foundation / mango.blender.org",
+        "creator": "Blender Foundation",
+        "evidenceReference": "cc-by-3.0:https://mango.blender.org/sharing/",
+        "id": "CC-BY-3.0",
+        "label": "Creative Commons Attribution 3.0",
+        "notice": "Film değiştirilmeden sunulur ve özgün jeneriği korunur.",
+        "projectUrl": "https://mango.blender.org/",
+        "url": "https://creativecommons.org/licenses/by/3.0/"
+      },
+      "rights": {
+        "endsAt": "2100-01-01T00:00:00.000Z",
+        "startsAt": "2012-09-26T00:00:00.000Z",
+        "territories": ["TR"]
+      },
+      "video": {
+        "sourceRecordUrl": "https://mango.blender.org/download/",
+        "sourceUrl": "https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov",
+        "videoQuality": "basic"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000014",
+      "slug": "elephants-dream",
+      "title": "Elephants Dream",
+      "originalTitle": null,
+      "synopsis": "Proog ve Emo, kendi iradesi varmış gibi davranan sonsuz bir makinenin içinde ilerlerken gördükleri dünya hakkında giderek daha farklı gerçeklere tutunur.",
+      "releaseDate": "2006-03-24",
+      "runtimeMinutes": 11,
+      "ageRating": null,
+      "genres": [
+        { "name": "Animasyon", "slug": "animasyon" },
+        { "name": "Bilim kurgu", "slug": "bilim-kurgu" },
+        { "name": "Fantastik", "slug": "fantastik" }
+      ],
+      "credits": [
+        {
+          "billingOrder": 0,
+          "displayLabel": null,
+          "kind": "DIRECTOR",
+          "name": "Bassam Kurdali"
+        },
+        {
+          "billingOrder": 0,
+          "displayLabel": "Yapımcı",
+          "kind": "OTHER",
+          "name": "Ton Roosendaal"
+        }
+      ],
+      "artwork": {
+        "backdrop": {
+          "alt": "Elephants Dream filminde dev makinenin içinde ilerleyen Proog ve Emo",
+          "focalPosition": "25% 50%",
+          "height": 405,
+          "sha256": "FC0CF73537AE1B402B467043616C4B2CF0325ABBCFC3A4A50E1364201548992C",
+          "sourceUrl": "https://download.blender.org/ED/elephantsdream-720-h264-st-aac.mov",
+          "src": "/open-films/elephants-dream.jpg",
+          "width": 720
+        },
+        "poster": {
+          "alt": "Elephants Dream filminde dev makinenin içinde ilerleyen Proog ve Emo",
+          "focalPosition": "25% 50%",
+          "height": 405,
+          "sha256": "FC0CF73537AE1B402B467043616C4B2CF0325ABBCFC3A4A50E1364201548992C",
+          "sourceUrl": "https://download.blender.org/ED/elephantsdream-720-h264-st-aac.mov",
+          "src": "/open-films/elephants-dream.jpg",
+          "width": 720
+        }
+      },
+      "license": {
+        "copyrightNotice": "(c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org",
+        "creator": "Blender Foundation",
+        "evidenceReference": "cc-by-2.5:https://orange.blender.org/blog/creative-commons-license-2/",
+        "id": "CC-BY-2.5",
+        "label": "Creative Commons Attribution 2.5",
+        "notice": "Film değiştirilmeden sunulur ve özgün jeneriği korunur. Katalog karesi resmî film dosyasından çıkarılmıştır.",
+        "projectUrl": "https://orange.blender.org/",
+        "url": "https://creativecommons.org/licenses/by/2.5/"
+      },
+      "rights": {
+        "endsAt": "2100-01-01T00:00:00.000Z",
+        "startsAt": "2006-03-24T00:00:00.000Z",
+        "territories": ["TR"]
+      },
+      "video": {
+        "sourceRecordUrl": "https://orange.blender.org/download/",
+        "sourceUrl": "https://download.blender.org/ED/elephantsdream-720-h264-st-aac.mov",
+        "videoQuality": "basic"
+      }
+    }
+  ]
+}

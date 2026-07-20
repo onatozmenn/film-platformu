@@ -41,9 +41,27 @@ describe("fixture catalog query", () => {
     ]);
   });
 
+  it("exposes the openly licensed film without assuming playback availability", async () => {
+    const results = await fixtureCatalogQuery.searchMovies("Blender Foundation", 1);
+    const detail = await fixtureCatalogQuery.getMovieBySlug("big-buck-bunny");
+
+    expect(results.movies).toEqual([
+      expect.objectContaining({ slug: "big-buck-bunny", title: "Big Buck Bunny" }),
+    ]);
+    expect(detail).toMatchObject({
+      attribution: {
+        creator: "Blender Foundation",
+        licenseLabel: "Creative Commons Attribution 3.0",
+      },
+      isPlayable: false,
+      poster: { src: "/fixtures/catalog/big-buck-bunny-backdrop.png" },
+      runtimeMinutes: 10,
+    });
+  });
+
   it.each([
     ["editor-secimi", "ay-isiginda-son-istasyon"],
-    ["yeni", "tasra-atlasi"],
+    ["yeni", "big-buck-bunny"],
     ["populer", "ay-isiginda-son-istasyon"],
   ] as const)("applies the %s ordering", async (sort, firstSlug) => {
     const result = await fixtureCatalogQuery.listMovies({

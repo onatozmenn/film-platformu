@@ -29,6 +29,7 @@
     "check:restore": "tsx scripts/check-restored-database.ts",
     "check:runtime-db": "tsx scripts/check-runtime-database-privileges.ts",
     "check:secrets": "tsx scripts/check-tracked-secrets.ts",
+    "content:ingest:open": "tsx scripts/ingest-open-films.ts",
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose down",
     "db:format": "prisma format",

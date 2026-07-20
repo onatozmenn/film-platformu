@@ -1871,6 +1871,30 @@ button {
   color: var(--color-heading);
 }
 
+.license-summary {
+  max-width: 68ch;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-surface-raised);
+}
+
+.license-summary p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0 0;
+  line-height: 1.6;
+}
+
+.license-summary strong {
+  color: var(--color-heading);
+}
+
+.license-summary a {
+  color: var(--color-accent);
+  text-underline-offset: 3px;
+}
+
 .detail-loading__header {
   display: grid;
   min-height: 480px;

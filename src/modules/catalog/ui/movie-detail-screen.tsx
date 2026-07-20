@@ -108,6 +108,23 @@ export function MovieDetailScreen({
               <span>{movie.subtitleLanguages.join(", ")}</span>
             </p>
           )}
+
+          {movie.attribution === null ? null : (
+            <section className="license-summary" aria-labelledby="license-heading">
+              <h2 id="license-heading">Kaynak ve lisans</h2>
+              <p>
+                <strong>{movie.attribution.creator}</strong>
+                <span>{movie.attribution.copyrightNotice}</span>
+                <a href={movie.attribution.licenseUrl} rel="noreferrer" target="_blank">
+                  {movie.attribution.licenseLabel}
+                </a>
+                <a href={movie.attribution.sourceUrl} rel="noreferrer" target="_blank">
+                  Resmî açık film dosyası
+                </a>
+                <span>{movie.attribution.notice}</span>
+              </p>
+            </section>
+          )}
         </div>
       </section>
 

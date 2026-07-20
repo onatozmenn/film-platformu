@@ -85,6 +85,14 @@ The supported local Compose project binds PostgreSQL to `127.0.0.1:54329` by def
 
 Optional Mux webhook development uses the provider's official forwarding mechanism or an approved HTTPS tunnel. Never disable signature verification for convenience; use the sandbox secret for the forwarded endpoint.
 
+### Reviewed Open-Film Ingest
+
+`pnpm content:ingest:open` is read-only by default. It validates the tracked manifest, local artwork SHA-256 values, approved `download.blender.org` media hosts, remote content type, and bounded content length. It does not contact the Mux management API or write PostgreSQL.
+
+`pnpm content:ingest:open --apply` is the explicit write mode. Run it only with the intended environment's complete `VIDEO_PROVIDER=mux` configuration and after reviewing expected Mux ingest/storage usage. It creates `signed` playback assets at the manifest quality, correlates them with a non-PII movie UUID, persists preparing state, polls with a bounded 15-minute window, and publishes only after the existing completeness policy passes. Re-running recovers or reuses existing provider assets rather than creating duplicates.
+
+The tracked manifest may contain only source and artwork URLs whose license evidence has been reviewed and recorded. A production release still requires the external owner-reviewed rights catalog and exact-release protected workflow evidence.
+
 ## Deployment Topology
 
 - Deploy the Next.js application to a Vercel-compatible managed runtime.

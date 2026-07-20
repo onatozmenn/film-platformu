@@ -1,4 +1,5 @@
 import type {
+  CatalogImage,
   CatalogFilters,
   CatalogPageView,
   CatalogQueryPort,
@@ -8,6 +9,7 @@ import type {
   SearchPageView,
   SearchSuggestion,
 } from "../application/catalog-query-port";
+import { getCatalogAttribution } from "../application/catalog-attribution";
 import { createPageInfo, paginate } from "@/shared/pagination/page";
 
 type FixtureMovie = MovieCardView &
@@ -19,6 +21,13 @@ type FixtureMovie = MovieCardView &
   }>;
 
 const catalogImages = {
+  bigBuckBunnyBackdrop: {
+    alt: "Çayırda duran Big Buck Bunny ve orman hayvanları",
+    focalPosition: "50% 48%",
+    height: 1080,
+    src: "/fixtures/catalog/big-buck-bunny-backdrop.png",
+    width: 1920,
+  },
   cityNight: {
     alt: "Gece ışıklarıyla yükselen şehir binaları",
     focalPosition: "50% 45%",
@@ -50,6 +59,18 @@ const catalogImages = {
 } as const;
 
 const movies = {
+  bigBuckBunny: {
+    addedOrder: 11,
+    editorialRank: 11,
+    genreSlugs: ["komedi", "macera"],
+    id: "00000000-0000-4000-8000-000000000011",
+    popularity: 37,
+    poster: catalogImages.bigBuckBunnyBackdrop,
+    rating: null,
+    slug: "big-buck-bunny",
+    title: "Big Buck Bunny",
+    year: 2008,
+  },
   coast: {
     addedOrder: 5,
     editorialRank: 2,
@@ -173,6 +194,9 @@ const movies = {
 } satisfies Record<string, FixtureMovie>;
 
 const allMovies = Object.values(movies);
+const detailBackdrops: Readonly<Record<string, CatalogImage>> = {
+  "big-buck-bunny": catalogImages.bigBuckBunnyBackdrop,
+};
 const genreOptions = [
   { name: "Bilim kurgu", slug: "bilim-kurgu" },
   { name: "Dram", slug: "dram" },
@@ -192,6 +216,18 @@ type DetailExtras = Readonly<{
 }>;
 
 const detailExtras: Readonly<Record<string, DetailExtras>> = {
+  "big-buck-bunny": {
+    ageRating: null,
+    credits: [
+      { label: "Yönetmen", names: ["Sacha Goedegebure"] },
+      { label: "Yapım", names: ["Blender Foundation"] },
+    ],
+    originalTitle: null,
+    runtimeMinutes: 10,
+    subtitleLanguages: [],
+    synopsis:
+      "Ormandaki küçük hayvanların sataşmalarından yorulan sakin bir tavşan, zekâsını kullanarak onlara unutamayacakları bir karşılık verir.",
+  },
   "ay-isiginda-son-istasyon": {
     ageRating: "13+",
     credits: [
@@ -370,6 +406,7 @@ const page: HomePageView = {
     {
       id: "new",
       movies: [
+        movies.bigBuckBunny,
         movies.tomorrow,
         movies.station,
         movies.wind,
@@ -439,7 +476,8 @@ export const fixtureCatalogQuery: CatalogQueryPort = {
     return {
       ...toCard(movie),
       ageRating: extras.ageRating,
-      backdrop: movie.poster,
+      attribution: getCatalogAttribution(movie.slug),
+      backdrop: detailBackdrops[slug] ?? movie.poster,
       credits: extras.credits,
       genres,
       isPlayable: false,

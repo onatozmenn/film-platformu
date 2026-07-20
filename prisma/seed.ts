@@ -288,6 +288,7 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
           data: {
             id: deterministicUuid("21000000", creditIndex),
             billingOrder,
+            displayLabel: creditKind(group.label) === CreditKind.OTHER ? group.label : null,
             kind: creditKind(group.label),
             movieId: detail.id,
             personId,
@@ -338,6 +339,18 @@ async function seedCatalog(client: PrismaClient): Promise<void> {
       slug: "bos-secki",
       state: CollectionState.PUBLISHED,
       title: "Boş seçki",
+    },
+  });
+
+  await client.contentRight.create({
+    data: {
+      allowStreaming: true,
+      endsAt: new Date("2100-01-01T00:00:00.000Z"),
+      evidenceReference: "cc-by-3.0:https://peach.blender.org/about/",
+      id: "41000000-0000-4000-8000-000000000004",
+      movieId: "00000000-0000-4000-8000-000000000011",
+      startsAt: new Date("2008-05-30T00:00:00.000Z"),
+      territory: "TR",
     },
   });
 

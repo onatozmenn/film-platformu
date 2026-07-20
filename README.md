@@ -51,7 +51,7 @@ The application is available at `http://localhost:3000`. PostgreSQL binds only t
 Available discovery routes:
 
 - `/` shows the photographic featured film and curated/ranked rails.
-- `/filmler` filters and paginates the fictional catalog by genre/year through URL parameters.
+- `/filmler` filters and paginates ten fictional fixtures plus the explicitly licensed `Big Buck Bunny` catalog entry by genre/year through URL parameters.
 - `/arama?q=` searches and paginates fictional title, original-title, and credited-person data with keyboard suggestions.
 - `/film/[slug]` renders editorial detail, optional metadata, and deterministic similar films.
 - `/izle/[slug]` requests a private, territory-checked playback session and renders the route-isolated Mux Player experience.
@@ -61,6 +61,22 @@ Available discovery routes:
 - `/yasal/**`, `/destek`, and `/hakkinda/veri-kaynaklari` are strict approved-content routes. They remain `404` and absent from navigation until reviewed brand/legal/support/TMDB content is committed.
 
 WP-03 exposes an `/izle` action only when fresh publication, trusted-territory rights, and active-ready asset policy passes. Fixture image sources and rights notes are recorded in [`public/fixtures/catalog/ATTRIBUTION.md`](public/fixtures/catalog/ATTRIBUTION.md); owned playback fixture provenance is recorded in [`public/fixtures/playback/ATTRIBUTION.md`](public/fixtures/playback/ATTRIBUTION.md).
+
+The reviewed open-film manifest includes `Big Buck Bunny`, `Sintel`, `Tears of Steel`, and `Elephants Dream` with official Blender-hosted media, local unbranded artwork, integrity hashes, rights references, and visible source/license credit. Film binaries are not committed or hotlinked at runtime.
+
+Validate the complete manifest, artwork hashes, and remote media headers without writing to Mux or PostgreSQL:
+
+```bash
+pnpm content:ingest:open
+```
+
+After reviewing the reported sources and expected Mux usage, explicitly apply the manifest:
+
+```bash
+pnpm content:ingest:open --apply
+```
+
+Apply mode creates only missing `signed`/`basic` Mux assets, recovers interrupted creates by stable external ID, reuses catalog-bound assets, waits for readiness, and atomically synchronizes catalog, credits, rights, attribution, audit, publication, and the new-items rail. Repeated runs are idempotent. The manifest is demo evidence, not a substitute for an owner-reviewed production rights catalog.
 
 Health endpoints:
 

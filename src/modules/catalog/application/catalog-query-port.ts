@@ -1,5 +1,7 @@
 import type { PageInfo } from "@/shared/pagination/page";
 
+import type { CatalogAttribution } from "./catalog-attribution";
+
 export type CatalogImage = Readonly<{
   alt: string;
   focalPosition: string;
@@ -73,6 +75,7 @@ export type CreditGroupView = Readonly<{
 
 export type MovieDetailView = FeaturedMovieView &
   Readonly<{
+    attribution: CatalogAttribution | null;
     credits: readonly CreditGroupView[];
     isPlayable: boolean;
     originalTitle: string | null;

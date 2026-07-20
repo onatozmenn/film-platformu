@@ -4,6 +4,7 @@ import type {
   CreditGroupView,
   MovieDetailView,
 } from "@/modules/catalog/application/catalog-query-port";
+import { getCatalogAttribution } from "@/modules/catalog/application/catalog-attribution";
 import type { AuditAction, AuditTargetType } from "@/modules/audit/application/audit-event";
 
 import type {
@@ -286,6 +287,7 @@ export function createPrismaAdminQuery(client: PrismaClient): AdminQueryPort {
       );
       return {
         ageRating: movie.ageRating,
+        attribution: getCatalogAttribution(movie.slug),
         backdrop: publicImage(backdrop),
         credits: creditGroups(movie.credits),
         genres: (

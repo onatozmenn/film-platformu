@@ -6,6 +6,7 @@ import { MovieDetailScreen } from "./movie-detail-screen";
 
 const movie: MovieDetailView = {
   ageRating: null,
+  attribution: null,
   backdrop: null,
   credits: [{ label: "Yönetmen", names: ["Pelin Somer"] }],
   genres: ["Dram"],
@@ -70,5 +71,37 @@ describe("MovieDetailScreen", () => {
     expect(screen.getByText("4,3 / 5")).toBeVisible();
     expect(screen.getByText("Türkçe, İngilizce")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Benzer filmler" })).toBeVisible();
+  });
+
+  it("renders source and license links for attributed open films", () => {
+    render(
+      <MovieDetailScreen
+        movie={{
+          ...movie,
+          attribution: {
+            copyrightNotice: "(c) copyright 2008, Blender Foundation / www.bigbuckbunny.org",
+            creator: "Blender Foundation",
+            licenseLabel: "Creative Commons Attribution 3.0",
+            licenseUrl: "https://creativecommons.org/licenses/by/3.0/",
+            notice: "Film değiştirilmeden sunulur ve özgün jeneriği korunur.",
+            sourceUrl:
+              "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4",
+          },
+          slug: "big-buck-bunny",
+          title: "Big Buck Bunny",
+          year: 2008,
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Kaynak ve lisans" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Creative Commons Attribution 3.0" })).toHaveAttribute(
+      "href",
+      "https://creativecommons.org/licenses/by/3.0/",
+    );
+    expect(screen.getByRole("link", { name: "Resmî açık film dosyası" })).toHaveAttribute(
+      "href",
+      "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4",
+    );
   });
 });

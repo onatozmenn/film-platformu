@@ -15,6 +15,7 @@ import type {
   SearchPageView,
   SearchSuggestion,
 } from "../application/catalog-query-port";
+import { getCatalogAttribution } from "../application/catalog-attribution";
 import { normalizeCatalogSearchText } from "../domain/catalog-text";
 
 const homeCollectionSlugs = [
@@ -191,12 +192,14 @@ function groupCredits(movie: MovieWithDetail): MovieDetailView["credits"] {
     groups.set(label, names);
   }
 
-  const preferredOrder = ["Yönetmen", "Senaryo", "Oyuncular", "Diğer"];
+  const preferredOrder = ["Yönetmen", "Senaryo", "Yapım", "Oyuncular", "Diğer"];
+  const orderFor = (label: string) => {
+    const index = preferredOrder.indexOf(label);
+    return index === -1 ? preferredOrder.length : index;
+  };
   return [...groups.entries()]
     .sort(
-      ([left], [right]) =>
-        preferredOrder.indexOf(left) - preferredOrder.indexOf(right) ||
-        left.localeCompare(right, "tr-TR"),
+      ([left], [right]) => orderFor(left) - orderFor(right) || left.localeCompare(right, "tr-TR"),
     )
     .map(([label, names]) => ({ label, names }));
 }
@@ -433,6 +436,7 @@ export function createPrismaCatalogQuery(
 
       return {
         ...mapFeatured(movie, ratings),
+        attribution: getCatalogAttribution(movie.slug),
         credits: groupCredits(movie),
         isPlayable: false,
         originalTitle: movie.originalTitle,

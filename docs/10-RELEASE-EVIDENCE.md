@@ -70,6 +70,6 @@ Unknown log, audit, webhook, and backup retention periods remain launch blockers
 - Production Mux, SMTP, TMDB, database, cron, and secret-manager values are not present in Git.
 - Edge controls, observability destinations, alert owners, dashboards, and protected GitHub Environment rules are not externally verified.
 - No isolated backup restore, staging rehearsal, migration/forward-fix exercise, production smoke, or owner acceptance has been performed.
-- External distribution-rights evidence is owner-managed and has not been supplied. The repository audit verifies only aggregate policy state and internal evidence links.
+- The development catalog has a hash-validated demo manifest for four Blender open movies: three CC BY 3.0 titles and one CC BY 2.5 title. The safe-default importer verifies official sources without writing and requires explicit `--apply` for billable Mux ingest. This repository evidence does not replace the owner-reviewed production rights catalog; production approval remains external.
 
 Production remains blocked until every readiness issue is cleared by real evidence and the exact release SHA passes the protected workflows.

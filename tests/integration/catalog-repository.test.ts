@@ -45,7 +45,7 @@ describe("Prisma catalog query", () => {
     const home = await query.getHomePage();
     const search = await query.searchMovies("film", 1);
 
-    expect(catalog.total).toBe(10);
+    expect(catalog.total).toBe(11);
     expect(catalog.movies.map(({ slug }) => slug)).not.toEqual(
       expect.arrayContaining([...hiddenSlugs]),
     );
@@ -73,7 +73,7 @@ describe("Prisma catalog query", () => {
       "kiyidaki-sessizlik",
     ]);
     expect(result.availableGenres.map(({ slug }) => slug)).toContain("dram");
-    expect(result.availableYears).toEqual([2026, 2025, 2024, 2023]);
+    expect(result.availableYears).toEqual([2026, 2025, 2024, 2023, 2008]);
   });
 
   it("maps detail credits and deterministic similar films without playback assumptions", async () => {
@@ -92,6 +92,17 @@ describe("Prisma catalog query", () => {
 
     const watchableDetail = await query.getMovieBySlug("kiyidaki-sessizlik");
     expect(watchableDetail?.subtitleLanguages).toEqual(["English", "Türkçe"]);
+
+    const openFilmDetail = await query.getMovieBySlug("big-buck-bunny");
+    expect(openFilmDetail).toMatchObject({
+      credits: [
+        { label: "Yönetmen", names: ["Sacha Goedegebure"] },
+        { label: "Yapım", names: ["Blender Foundation"] },
+      ],
+      isPlayable: false,
+      poster: { src: "/fixtures/catalog/big-buck-bunny-backdrop.png" },
+      runtimeMinutes: 10,
+    });
   });
 
   it("searches normalized titles, original titles, and credited people with a bounded suggestion contract", async () => {
@@ -134,9 +145,9 @@ describe("Prisma catalog query", () => {
       const catalog = await query.listMovies({ genre: null, page: 99, sort: "yeni", year: null });
       const search = await query.searchMovies("sayfalama", 2);
 
-      expect(catalog.total).toBe(40);
+      expect(catalog.total).toBe(41);
       expect(catalog.pageInfo).toEqual({ page: 2, pageSize: 24, totalPages: 2 });
-      expect(catalog.movies).toHaveLength(16);
+      expect(catalog.movies).toHaveLength(17);
       expect(search.total).toBe(30);
       expect(search.pageInfo).toEqual({ page: 2, pageSize: 24, totalPages: 2 });
       expect(search.movies).toHaveLength(6);
